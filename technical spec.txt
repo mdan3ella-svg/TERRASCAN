@@ -1,0 +1,47 @@
+TERRASCAN | TECHNICAL SPECIFICATION v1.0
+
+1. System Overview
+
+TERRASCAN is a client-side spatial analysis application built on the Three.js WebGL library. It is designed to perform real-time structural and geological evaluations without the need for server-side pre-processing, utilizing the user's GPU for high-concurrency spatial calculations.
+
+2. Architectural Stack
+
+Rendering Engine: Three.js (r128) utilizing a Logarithmic Depth Buffer to handle massive scale differences between fine structural details and large topographic meshes.
+
+Coordinate System: EPSG:3857 (Web Mercator) mapping projected onto a localized Cartesian grid.
+
+Physics Engine: Custom Finite Element Analysis (FEA) solver using linear interpolation for stress-strain visualization.
+
+UI/UX: Tailwind CSS for responsive, low-latency control panels.
+
+3. Data Ingestion & Serialization
+
+3.1 BIM/IFC Processing
+
+Parser: Simulated IFC STEP parser mapping Industry Foundation Classes to THREE.Group hierarchies.
+
+OBJ Loader: Asynchronous ingestion of Wavefront OBJ files with automated normalization of vertex normals for engineering-grade shading.
+
+Export: Serialization of scene entities into a valid ISO-10303-21 (IFC 2x3) STEP physical file format.
+
+3.2 Volumetric Geology Logic
+
+Terrain: Procedurally deformed PlaneGeometry using Perlin-style noise for elevation simulation.
+
+Strata Layers: Volumetric BoxGeometry stacks with THREE.Plane clipping.
+
+Sectioning: Real-time GPU clipping using renderer.localClippingEnabled to perform non-destructive spatial cross-sections.
+
+4. Performance Benchmarks
+
+LOD (Level of Detail): Native support for mesh density scaling.
+
+Target FPS: 60fps on modern hardware with up to 1.5M polygons.
+
+Memory Management: Automatic disposal of geometries and textures during scene purges to prevent memory leaks in long-running engineering sessions.
+
+5. Security & Persistence
+
+Local Storage: Project state serialization into JSON strings for session persistence via localStorage.
+
+Privacy: 100% client-side execution; data never leaves the user’s local environment unless explicitly exported.
