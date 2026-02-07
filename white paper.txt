@@ -1,0 +1,25 @@
+TERRASCAN: Bridging the Gap Between Geotechnical Surveying and Structural Design
+
+Abstract
+
+Modern civil engineering often suffers from a "data silo" problem: surveying data and structural design models exist in separate software ecosystems. TERRASCAN introduces a unified "Terra-Mechanical" environment where BIM (Building Information Modeling) and Volumetric Geology are processed simultaneously. This paper outlines the methodology of real-time spatial element simulation and its impact on structural safety and design efficiency.
+
+1. Introduction
+
+Traditional structural analysis assumes a static, often idealized, foundation. However, real-world structural integrity is deeply dependent on sub-surface strata. TERRASCAN aims to eliminate the friction between these disciplines by allowing engineers to "X-ray" the ground beneath their designs in a browser-native environment.
+
+2. Methodology: Volumetric Strata Simulation
+
+Standard CAD software represents the ground as a surface (TIN/Mesh). TERRASCAN utilizes volumetric stacks of substrate types (Topsoil, Clay, Bedrock). By applying clipping planes to these volumes, engineers can visualize exactly how foundation slabs interface with specific soil layers, allowing for immediate identification of settlement risks and expansive clay hazards.
+
+3. Real-Time FEA Solver
+
+The application implements a real-time Finite Element Analysis (FEA) visualization. By mapping material properties (Yield Strength, Poisson’s Ratio) from IFC metadata to the rendering engine, we can simulate load distribution. The visual "heat-map" transition provides intuitive feedback on stress concentrations, allowing for rapid iterative design before expensive high-fidelity simulation runs.
+
+4. The Industry Foundation Classes (IFC) Bridge
+
+Interoperability is the core of TERRASCAN. By providing a formal IFC 2x3 export engine, we ensure that design iterations performed within the simulation environment can be reintegrated into the master project workflow (Autodesk Revit, ArchiCAD, etc.).
+
+5. Conclusion
+
+TERRASCAN represents a shift toward more integrated, accessible, and real-time engineering tools. By democratizing access to sub-surface visualization and structural stress testing, the platform reduces the risk of foundation failure and enhances the collaborative design process between surveyors and civil engineers.
