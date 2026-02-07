@@ -1,77 +1,93 @@
 TERRASCAN | SPATIAL ELEMENT SIMULATION ANALYSIS
 
-TERRASCAN is a high-fidelity, web-based civil engineering and geological simulation suite. It bridges the gap between raw surveying data and structural BIM (Building Information Modeling) design by providing a "Terra-Mechanical" environment for real-time evaluation, volumetric geology analysis, and structural stress testing.
+TERRASCAN is a professional-grade, web-native spatial analysis and structural simulation suite. Engineered for the intersection of Civil Engineering, Geotechnical Surveying, and BIM (Building Information Modeling), TERRASCAN provides a high-fidelity environment for real-time element evaluation against volumetric geological strata.
 
-🛠 Core Capabilities
+🏗️ Version 7.0 "Professional Edition" Updates
 
-1. Multi-Workspace Navigation
+The v7.0 update solidifies the platform's branding and robustness:
 
-The application is categorized into three distinct operational environments:
+Maturity Branding: A revised "Terra-Industrial" UI palette utilizing high-contrast warm neutrals and professional stone-grey tones.
 
-Survey Workspace: Focused on topographic evaluation and sub-surface strata inspection. Features a LiDAR-style wireframe terrain.
+Simulation Kernel: Integrated Factor of Safety (FoS) Monitoring and Finite Element Analysis (FEA) solider with real-time mesh heat-mapping.
 
-BIM Design Workspace: Provides a professional hierarchy for managing structural elements (IFC/OBJ), inspecting metadata, and spatial organization.
+Enhanced Data Bridge: Improved IFC 2x3 STEP serialization and asynchronous OBJ ingestion logic.
 
-Analysis Workspace: A dedicated environment for Finite Element Analysis (FEA) solvers, stability calculations, and safety factor reporting.
+Spatial UX: Multi-workspace architecture (Survey, Design, Analysis) with dedicated engineering audit logging.
 
-2. Volumetric Geology Engine
+🛠️ Core Workspace Capabilities
 
-Unlike standard surface-mesh tools, TERRASCAN simulates sub-surface strata including:
+1. Survey Workspace [LiDAR Context]
 
-Topsoil, Expansive Clay, and Igneous Bedrock layers.
+Focuses on topographic and sub-surface data validation.
 
-Dynamic Water Table adjustments.
+Volumetric Strata Visualization: Inspect Organic, Alluvial, and Lithic horizons.
 
-Real-time Section Cutting (Spatial Slicing) to view foundation-to-soil relationships.
+Borehole Simulation: Real-time sub-surface scanning via the vertical strata slider.
 
-3. BIM & Data Ingestion
+Grid Calibration: High-contrast spatial grid (0x000000) for sub-millimeter orientation.
 
-IFC Export: Generates formal IFC 2x3 Physical Files (STEP format) for interoperability with external CAD software.
+2. BIM Design Workspace [Spatial Context]
 
-Asset Ingestion: Supports drag-and-drop or manual import for .obj and .ifc files.
+A robust environment for asset management and metadata verification.
 
-Inspector: Deep-dive into GUIDs, material strengths, and load calculations via a raycasting selection engine.
+Entity Hierarchy: Live tree view with individual visibility and lifecycle controls (Hide, Focus, Purge).
 
-🎮 Interface & Controls
+Attribute Inspector: Deep-dive into IFC PredefinedTypes, GUIDs, and material specs.
 
-Navigation
+Cross-Format Support: Native OBJ ingestion and simulated IFC schema mapping.
 
-Left Click + Drag: Orbit scene.
+3. Analysis Workspace [Simulation Context]
 
-Right Click + Drag / Shift + Click: Pan scene.
+The engineering "Solve" environment.
 
-Scroll: Zoom in/out.
+FEA Solver: GPU-accelerated stress-strain heat-mapping on structural elements.
 
-Double-Click (Hierarchy): Focus camera on specific structural entity.
+Stability Indexing: Real-time Factor of Safety (FoS) monitoring during load testing.
 
-Hotkeys
+Clipping Engine: Dynamic X-axis section planes for foundation-to-rock interface verification.
 
-[T]: Switch to Survey Mode.
+🎮 Operational Standards
 
-[B]: Switch to BIM Design Mode.
+Navigation & Control
 
-[G]: Switch to Volumetric Geology Mode.
+Orbit: Left Click + Drag
 
-[Space]: Reset to Isometric Home View.
+Pan: Right Click + Drag
 
-🚀 Technical Stack
+Zoom: Scroll / Pinch
 
-Rendering: Three.js (WebGL)
+Home View: [Space Bar]
 
-Styling: Tailwind CSS
+Focus Selection: Double-Click Entity (in Tree or Viewport)
 
-Icons: Lucide-React
+Engineering Simulation Protocols
 
-Fonts: Inter & JetBrains Mono
+Define Substrate: Select the soil classification (ASTM D2487 standards) in the Survey Workspace.
 
-📂 Installation
+Ingest Assets: Use the Global Import tool to load BIM components.
 
-TERRASCAN is a single-file application.
+Verify Metadata: Ensure material strengths and weight calculations are correctly mapped in the Inspector.
 
-Download terraforge_pro.html.
+Execute Solve: Trigger the FEA Mesh Solver. Monitor the Stability Index for amber/red fatigue warnings.
 
-Open in any modern browser (Chrome/Edge recommended for performance).
+Export Documentation: Generate a formal IFC 2x3 Physical File for master project reintegration.
 
-No server-side installation required; all logic runs in the client-side kernel.
+🚀 Technical Architecture
 
-Developed for advanced spatial element simulation and structural integrity evaluation.
+Core Kernel: Three.js r128 (Custom Logarithmic Depth Buffer Implementation)
+
+UI Infrastructure: Tailwind CSS 3.0
+
+Asset Logic: Asynchronous OBJLoader
+
+Typographic Standards: Inter (SUI) & JetBrains Mono (Terminal)
+
+📂 Installation & Compliance
+
+TERRASCAN is a 100% client-side "Single-File" executable.
+
+Open terraforge_pro.html in a WebGL-compatible browser.
+
+All data persistence is localized via localStorage; no external database connections are required, ensuring maximum IP security for sensitive project data.
+
+Developed by TERRASCAN SPATIAL SYSTEMS - Professional Civil Engineering Division.
