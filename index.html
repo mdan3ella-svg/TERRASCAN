@@ -21,6 +21,14 @@
             --terra-brand: #0891b2;
             --terra-warn: #d97706;
             --terra-err: #b91c1c;
+            
+            /* Professional Discipline Colors */
+            --color-survey: #065f46;  /* Sage Green / Geology */
+            --color-design: #1e40af;  /* Cobalt Blue / Structural */
+            --color-analysis: #991b1b; /* Crimson / Civil Physics */
+            
+            /* Dynamic Accent - Defaulting to Survey */
+            --ws-accent: var(--color-survey);
         }
 
         body, html { 
@@ -29,6 +37,7 @@
             font-family: 'Inter', sans-serif; 
             color: var(--terra-text); 
             -webkit-font-smoothing: antialiased;
+            transition: background-color 0.5s ease;
         }
 
         #canvas-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; cursor: crosshair; }
@@ -48,18 +57,31 @@
             @apply px-6 py-3 text-[10px] font-black uppercase tracking-[0.25em] transition-all border-b-2 border-transparent text-stone-400 hover:text-stone-900 flex items-center gap-3;
         }
         .workspace-btn.active {
-            @apply border-stone-800 text-stone-900 bg-white/50 rounded-t-2xl shadow-inner;
+            @apply text-stone-900 bg-white/50 rounded-t-2xl shadow-inner;
+            border-bottom-color: var(--ws-accent);
+        }
+        .workspace-btn.active i {
+            color: var(--ws-accent);
         }
 
         /* Specialized Toolbar Icons */
         .control-btn {
             @apply p-3.5 rounded-[1.25rem] bg-white border border-stone-300 hover:border-stone-500 hover:shadow-xl transition-all duration-300 text-stone-600 active:scale-90 flex items-center justify-center;
         }
-        .control-btn.active { @apply bg-stone-900 text-stone-100 border-stone-900 shadow-stone-900/20; }
+        .control-btn.active { 
+            background: var(--ws-accent);
+            color: white;
+            border-color: var(--ws-accent);
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2);
+        }
 
         /* Unique Import Button Styling */
         .ingest-btn {
-            @apply flex items-center gap-3 bg-stone-900 text-stone-100 pl-4 pr-6 py-2.5 rounded-2xl hover:bg-black transition-all shadow-lg active:scale-95;
+            @apply flex items-center gap-3 text-stone-100 pl-4 pr-6 py-2.5 rounded-2xl transition-all shadow-lg active:scale-95;
+            background: var(--ws-accent);
+        }
+        .ingest-btn:hover {
+            filter: brightness(1.2);
         }
 
         .metric-value { font-family: 'JetBrains Mono', monospace; }
@@ -70,12 +92,15 @@
 
         .bim-node { @apply transition-all duration-200 border border-transparent rounded-2xl mb-1; }
         .bim-node:hover { @apply bg-stone-200/60 border-stone-300; }
-        .bim-node.selected { @apply bg-white border-stone-400 shadow-md; }
+        .bim-node.selected { 
+            @apply bg-white shadow-md; 
+            border-color: var(--ws-accent);
+        }
         
         .scan-line {
             position: absolute; width: 100%; height: 2px;
-            background: linear-gradient(90deg, transparent, var(--terra-brand), transparent);
-            box-shadow: 0 0 25px rgba(8, 145, 178, 0.7);
+            background: linear-gradient(90deg, transparent, var(--ws-accent), transparent);
+            box-shadow: 0 0 25px var(--ws-accent);
             animation: scan 5s ease-in-out infinite;
             display: none; z-index: 10;
         }
@@ -89,14 +114,21 @@
         }
 
         .gauge-container { @apply h-2 w-full bg-stone-300 rounded-full overflow-hidden mt-3; }
-        .gauge-fill { @apply h-full transition-all duration-1000 ease-in-out; }
+        .gauge-fill { 
+            @apply h-full transition-all duration-1000 ease-in-out;
+            background: var(--ws-accent);
+        }
 
         .loader-spin { animation: spin 1s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        /* Animation Classes */
         .fade-in-up { animation: fadeInUp 0.4s ease-out; }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Dynamic Indicator Glow */
+        .ws-glow {
+            box-shadow: 0 0 15px -3px var(--ws-accent);
+        }
     </style>
 </head>
 <body>
@@ -138,7 +170,7 @@
             <div class="glass-panel p-2.5 rounded-[2.25rem] flex items-center gap-4 shadow-xl">
                 <div class="flex flex-col items-end px-4">
                     <div class="flex items-center gap-2">
-                        <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50"></div>
+                        <div class="w-2.5 h-2.5 rounded-full ws-glow animate-pulse" style="background-color: var(--ws-accent);"></div>
                         <span class="text-[9px] font-black text-stone-900 uppercase tracking-widest">Core Synchronized</span>
                     </div>
                     <span class="text-[8px] text-stone-400 font-bold">Latency: 2ms</span>
@@ -250,7 +282,7 @@
 
                     <div id="analysis-controls" class="space-y-8 hidden">
                         <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-400">FEA Solver</h2>
-                        <button onclick="runFEA()" id="btn-fea-solve" class="w-full bg-stone-900 text-stone-100 py-5 rounded-3xl text-[10px] font-black uppercase tracking-[0.25em] flex items-center justify-center gap-3 shadow-2xl hover:bg-black transition-all active:scale-95 group">
+                        <button onclick="runFEA()" id="btn-fea-solve" class="w-full text-stone-100 py-5 rounded-3xl text-[10px] font-black uppercase tracking-[0.25em] flex items-center justify-center gap-3 shadow-2xl transition-all active:scale-95 group" style="background-color: var(--ws-accent);">
                             <i data-lucide="zap" class="w-5 h-5 text-amber-400 group-hover:animate-pulse"></i> Execute Solve
                         </button>
                         <div class="space-y-4">
@@ -259,7 +291,7 @@
                                     <span class="text-[10px] uppercase font-black text-stone-500 tracking-widest">Stability</span>
                                     <span id="val-safety" class="metric-value text-xs text-stone-900 font-black">100%</span>
                                 </div>
-                                <div class="gauge-container shadow-inner"><div id="safety-fill" class="gauge-fill bg-stone-800" style="width: 100%"></div></div>
+                                <div class="gauge-container shadow-inner"><div id="safety-fill" class="gauge-fill" style="width: 100%"></div></div>
                             </div>
                             <div class="p-5 bg-white rounded-3xl border border-stone-200 shadow-sm">
                                 <span class="text-[10px] uppercase font-black text-stone-500 tracking-widest mb-3 block">Max Stress Intensity</span>
@@ -334,6 +366,12 @@
             { name: 'Igneous Parent Rock', depth: 50, color: 0x292524 }
         ];
 
+        const DISCIPLINE_COLORS = {
+            survey: '#065f46',
+            design: '#1e40af',
+            analysis: '#991b1b'
+        };
+
         function init() {
             if (typeof lucide !== 'undefined') lucide.createIcons();
 
@@ -375,6 +413,10 @@
             addBIMComponent('MASTER_FOUNDATION_01', 'IfcSlab', 'C35_Reinforced_Concrete', new THREE.Vector3(0, 12, 0), new THREE.Vector3(160, 6, 100));
 
             setupInteractionHub();
+            
+            // Set initial color variables
+            document.documentElement.style.setProperty('--ws-accent', DISCIPLINE_COLORS['survey']);
+            
             switchWorkspace('survey');
             animate();
             
@@ -417,12 +459,21 @@
 
         function switchWorkspace(ws) {
             activeWorkspace = ws;
+            
+            // Update Color Identity
+            const accent = DISCIPLINE_COLORS[ws];
+            document.documentElement.style.setProperty('--ws-accent', accent);
+            
             const btnStates = ['survey', 'design', 'analysis'];
             btnStates.forEach(m => document.getElementById(`ws-${m}`).classList.toggle('active', m === ws));
+            
             document.getElementById('survey-controls').classList.toggle('hidden', ws !== 'survey');
             document.getElementById('analysis-controls').classList.toggle('hidden', ws !== 'analysis');
+            
             if (terrain && terrain.material) terrain.material.wireframe = (ws === 'survey');
             if (bimModel) bimModel.visible = (ws !== 'survey');
+            
+            updateTree(); // Refresh tree icons with new accent color
             log(`Workspace Transition: [${ws.toUpperCase()}]`, "refresh-cw");
         }
 
@@ -461,7 +512,7 @@
 
                 node.innerHTML = `
                     <div class="flex items-center gap-4">
-                        <i data-lucide="${icon}" class="w-4.5 h-4.5 ${d.visible ? 'text-stone-900' : 'text-stone-300'}"></i>
+                        <i data-lucide="${icon}" class="w-4.5 h-4.5 transition-colors duration-300" style="color: ${d.visible ? 'var(--ws-accent)' : '#d1d5db'}"></i>
                         <span class="text-[10px] ${d.visible ? 'text-stone-900 font-black' : 'text-stone-400'} uppercase tracking-tight">${d.name}</span>
                     </div>
                     <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
@@ -486,10 +537,8 @@
                 
                 log(`Mounting Archive: ${file.name} (${sizeMB} MB)`, "upload");
                 
-                // Pre-flight check
                 if (sizeMB > RISK_THRESHOLD_MB) {
                     log(`CRITICAL: File exceeds ${RISK_THRESHOLD_MB}MB. High risk of browser glitch.`, "alert-octagon");
-                    // Continue anyway but warn
                 } else if (sizeMB > MAX_SAFE_SIZE_MB) {
                     log(`WARN: File larger than ${MAX_SAFE_SIZE_MB}MB. Performance may degrade.`, "alert-triangle");
                 }
@@ -571,16 +620,16 @@
             const p = document.getElementById('property-panel');
             p.innerHTML = `
                 <div class="space-y-6 fade-in-up">
-                    <div class="p-5 bg-stone-900 text-stone-100 rounded-[1.75rem] shadow-2xl">
+                    <div class="p-5 bg-stone-900 text-stone-100 rounded-[1.75rem] shadow-2xl border-l-4" style="border-color: var(--ws-accent);">
                         <span class="text-[9px] font-black uppercase text-stone-500 mb-2 block tracking-widest">GUID Registry</span>
                         <div class="font-mono text-[9px] break-all leading-relaxed">${ent.id}</div>
                     </div>
                     <div class="space-y-2">
-                        <div class="p-4 bg-white border border-stone-200 rounded-2xl flex justify-between items-center">
+                        <div class="p-4 bg-white border border-stone-200 rounded-2xl flex justify-between items-center shadow-sm">
                             <span class="text-stone-400 uppercase text-[9px] font-black tracking-[0.2em]">Class</span>
                             <span class="text-[10px] font-black">${ent.type}</span>
                         </div>
-                        <div class="p-4 bg-white border border-stone-200 rounded-2xl flex justify-between items-center">
+                        <div class="p-4 bg-white border border-stone-200 rounded-2xl flex justify-between items-center shadow-sm">
                             <span class="text-stone-400 uppercase text-[9px] font-black tracking-[0.2em]">Material</span>
                             <span class="text-[10px] font-black">${ent.material}</span>
                         </div>
@@ -588,9 +637,14 @@
                 </div>`;
             bimModel.children.forEach(m => {
                 const match = m.userData.id === ent.id;
-                m.material.emissive.set(match ? 0x0891b2 : 0x000000);
+                m.material.emissive.set(match ? new THREE.Color(accentToHex()) : 0x000000);
                 m.material.emissiveIntensity = 0.6;
             });
+        }
+
+        function accentToHex() {
+            const color = getComputedStyle(document.documentElement).getPropertyValue('--ws-accent').trim();
+            return color;
         }
 
         function updateStrataView(v) {
@@ -634,7 +688,7 @@
             d.className = "flex items-start animate-in slide-in-from-left duration-300 border-b border-stone-200 pb-3";
             d.innerHTML = `
                 <span class="text-stone-300 font-bold mr-3 whitespace-nowrap text-[8px] mt-1.5 font-mono">[${new Date().toLocaleTimeString([], {hour12:false, minute:'2-digit', second:'2-digit'})}]</span>
-                <i data-lucide="${icon}" class="w-4 h-4 mr-3 text-stone-400 ${isSpin}"></i>
+                <i data-lucide="${icon}" class="w-4 h-4 mr-3 ${isSpin}" style="color: var(--ws-accent);"></i>
                 <span class="leading-relaxed tracking-tight text-[11px]">${m}</span>
             `;
             l.prepend(d);
