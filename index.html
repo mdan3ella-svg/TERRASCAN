@@ -19,6 +19,8 @@
             --terra-accent: #44403c;
             --terra-text: #1c1917;
             --terra-brand: #0891b2;
+            --terra-warn: #d97706;
+            --terra-err: #b91c1c;
         }
 
         body, html { 
@@ -80,6 +82,10 @@
 
         .gauge-container { @apply h-1.5 w-full bg-stone-300 rounded-full overflow-hidden mt-2; }
         .gauge-fill { @apply h-full transition-all duration-700 ease-out; }
+
+        /* Loader Animation */
+        .loader-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
@@ -118,7 +124,7 @@
             </div>
 
             <div class="glass-panel p-2 rounded-3xl flex items-center space-x-2">
-                <button onclick="triggerImport()" class="control-btn tooltip" data-tip="Import Design Asset (OBJ/IFC)">
+                <button onclick="triggerImport()" id="btn-import-master" class="control-btn tooltip" data-tip="Import Design Asset (OBJ/IFC)">
                     <i data-lucide="file-up" class="w-4.5 h-4.5"></i>
                 </button>
                 <div class="h-6 w-px bg-stone-300 mx-1"></div>
@@ -208,7 +214,7 @@
                 <div class="glass-panel p-6 rounded-3xl flex-1 flex flex-col shadow-sm overflow-hidden">
                     <h2 class="text-[10px] font-black uppercase tracking-[0.2em] text-stone-400 mb-4">Audit Log</h2>
                     <div id="log" class="flex-1 font-mono text-[10px] text-stone-600 space-y-2.5 overflow-y-auto pr-2 custom-scrollbar">
-                        <div class="opacity-50">[INIT] Kernel Standby.</div>
+                        <!-- Log entries -->
                     </div>
                 </div>
             </div>
@@ -284,7 +290,7 @@
             switchWorkspace('survey');
             animate();
             
-            log("System Authenticated. Ready for asset ingestion.");
+            log("System Authenticated. Ready for asset ingestion.", "shield-check");
         }
 
         function createGeology() {
@@ -345,9 +351,16 @@
                 const node = document.createElement('div');
                 node.className = 'bim-node p-3 rounded-2xl text-[10px] cursor-pointer flex items-center justify-between bg-stone-100/50 group mb-1';
                 node.onclick = () => inspectElement(d);
+                
+                // Determine Icon based on Type
+                let iconName = 'package';
+                if (d.type === 'IfcSlab') iconName = 'layers';
+                if (d.type === 'Imported_OBJ') iconName = 'file-box';
+                if (d.type.includes('IFC')) iconName = 'building-2';
+
                 node.innerHTML = `
                     <div class="flex items-center">
-                        <i data-lucide="package" class="w-3.5 h-3.5 mr-3 ${d.visible ? 'text-stone-800' : 'text-stone-300'}"></i>
+                        <i data-lucide="${iconName}" class="w-3.5 h-3.5 mr-3 ${d.visible ? 'text-stone-800' : 'text-stone-300'}"></i>
                         <span class="${d.visible ? 'text-stone-900 font-bold' : 'text-stone-300'}">${d.name}</span>
                     </div>
                     <div class="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -366,38 +379,54 @@
 
         function handleFileSelect(e) {
             const files = e.target.files;
+            if (!files.length) return;
+
             Array.from(files).forEach(file => {
                 const ext = file.name.split('.').pop().toLowerCase();
-                log(`Ingesting File: ${file.name}`);
+                log(`Ingesting File: ${file.name}`, "upload-cloud");
                 
                 if (ext === 'obj') {
                     const reader = new FileReader();
                     reader.onload = (ev) => processOBJ(ev.target.result, file.name);
+                    reader.onerror = () => log(`Failed to read OBJ: ${file.name}`, "alert-triangle");
                     reader.readAsText(file);
                 } else if (ext === 'ifc') {
-                    // Logic: Since IFC is too large for single-file, we parse metadata and generate an element proxy
                     const reader = new FileReader();
                     reader.onload = (ev) => processIFC(ev.target.result, file.name);
+                    reader.onerror = () => log(`Failed to read IFC: ${file.name}`, "alert-triangle");
                     reader.readAsText(file);
                 } else {
-                    log(`ERROR: Format .${ext} not supported.`);
+                    log(`Format .${ext} not supported.`, "alert-circle");
                 }
             });
+            // Reset input so same file can be imported again
+            e.target.value = '';
         }
 
         function processOBJ(data, filename) {
+            log(`Parsing OBJ: ${filename}`, "loader");
+            
+            // Safety check for OBJLoader
+            if (typeof THREE.OBJLoader === 'undefined') {
+                log("Library Error: OBJLoader not found.", "alert-triangle");
+                return;
+            }
+
             const loader = new THREE.OBJLoader();
             try {
                 const obj = loader.parse(data);
+                let meshCount = 0;
                 obj.traverse(c => {
                     if (c.isMesh) {
+                        meshCount++;
                         c.material = new THREE.MeshStandardMaterial({ color: 0x78716c });
                         c.castShadow = true;
+                        c.receiveShadow = true;
                         c.userData = { 
-                            id: 'IMP_' + Math.random().toString(36).substr(2, 4).toUpperCase(),
-                            name: filename,
+                            id: 'IMP_' + Math.random().toString(36).substr(2, 6).toUpperCase(),
+                            name: filename + (meshCount > 1 ? `_${meshCount}` : ''),
                             type: 'Imported_OBJ',
-                            material: 'Raw_Mesh',
+                            material: 'Raw_Mesh_PBR',
                             weight: '150kN',
                             visible: true
                         };
@@ -405,30 +434,46 @@
                     }
                 });
                 updateTree();
-                log(`SUCCESS: OBJ ${filename} imported.`);
-            } catch (err) { log("FAILED: OBJ Parse error."); }
+                log(`SUCCESS: Imported ${filename} (${meshCount} meshes).`, "check-circle");
+            } catch (err) { 
+                console.error(err);
+                log("FAILED: OBJ Geometry parse error.", "x-circle"); 
+            }
         }
 
         function processIFC(data, filename) {
-            // IFC Metadata Proxy Logic: We look for structural keywords and spawn proxies
-            log(`ANALYZING IFC SCHEMA: ${filename}`);
-            const entities = (data.match(/IFCCOLUMN|IFCWALL|IFCSLAB/g) || []);
-            const count = entities.length;
+            log(`Analyzing IFC Structure: ${filename}`, "scan");
             
-            // Simulating spatial reconstruction
-            for(let i=0; i < Math.min(count, 5); i++) {
-                addBIMComponent(`${filename}_E${i}`, entities[i], 'Structural_Steel', 
-                    new THREE.Vector3(Math.random()*60-30, 20, Math.random()*60-30), 
-                    new THREE.Vector3(5, 20, 5)
+            // High-fidelity proxy logic: Scan schema for structural types
+            const slabMatches = (data.match(/IFCSLAB/g) || []).length;
+            const wallMatches = (data.match(/IFCWALL/g) || []).length;
+            const columnMatches = (data.match(/IFCCOLUMN/g) || []).length;
+            
+            const total = slabMatches + wallMatches + columnMatches;
+            
+            if (total === 0) {
+                log(`Warning: No standard structural entities in IFC.`, "alert-circle");
+            }
+
+            // Simulate spatial reconstruction for primary components
+            if (slabMatches > 0) {
+                addBIMComponent(`${filename}_Slab_Proxy`, 'IFC_Slab', 'Concrete_IFC_Spec', new THREE.Vector3(0, 15, 0), new THREE.Vector3(80, 2, 80));
+            }
+            
+            for(let i=0; i < Math.min(columnMatches, 4); i++) {
+                addBIMComponent(`${filename}_Col_${i}`, 'IFC_Column', 'Steel_IFC_Spec', 
+                    new THREE.Vector3(Math.random()*40-20, 25, Math.random()*40-20), 
+                    new THREE.Vector3(4, 25, 4)
                 );
             }
-            log(`SUCCESS: IFC ${filename} processed. ${count} entities detected.`);
+
+            log(`SUCCESS: Map generated for ${filename} (${total} entities).`, "check-circle");
         }
 
         function runFEA() {
             if(isSolving || bimModel.children.length === 0) return;
             isSolving = true;
-            log("SOLVER: Analyzing Spatial Elements...");
+            log("SOLVER: Initializing FEA Mesh Solver...", "zap");
             let i = 0;
             const progress = setInterval(() => {
                 i += 0.5;
@@ -439,13 +484,17 @@
                 document.getElementById('safety-fill').style.width = safety + "%";
                 
                 bimModel.children.forEach(m => {
-                    if(m.isMesh) m.material.color.lerp(new THREE.Color(0xd97706), 0.05);
+                    if(m.isMesh) {
+                        const col = new THREE.Color(0x78716c);
+                        col.lerp(new THREE.Color(0xd97706), i/10);
+                        m.material.color.copy(col);
+                    }
                 });
 
                 if(i >= 10) {
                     clearInterval(progress);
                     isSolving = false;
-                    log(`SOLVE COMPLETE: Peak stress ${stress} MPa.`);
+                    log(`SOLVE COMPLETE: Peak stress ${stress} MPa identified.`, "info");
                 }
             }, 80);
         }
@@ -461,6 +510,7 @@
             document.getElementById('panel-geology').classList.toggle('hidden', ws !== 'survey');
             if (terrain && terrain.material) terrain.material.wireframe = (ws === 'survey');
             if (bimModel) bimModel.visible = (ws !== 'survey');
+            log(`Workspace Context: ${ws.toUpperCase()}`, "refresh-cw");
         }
 
         function updateStrataView(v) {
@@ -506,11 +556,24 @@
         function deleteEntity(id, e) {
             e.stopPropagation();
             const c = bimModel.children.find(x => x.userData.id === id);
-            if(c) { bimModel.remove(c); updateTree(); }
+            if(c) { 
+                bimModel.remove(c); 
+                updateTree(); 
+                log(`Removed Entity: ${c.userData.name}`, "trash-2");
+            }
         }
 
-        function clearEntities() { bimModel.clear(); updateTree(); }
-        function showAllEntities() { bimModel.children.forEach(c => { c.visible = true; c.userData.visible = true; }); updateTree(); }
+        function clearEntities() { 
+            bimModel.clear(); 
+            updateTree(); 
+            log("Scene purged.", "trash");
+        }
+        
+        function showAllEntities() { 
+            bimModel.children.forEach(c => { c.visible = true; c.userData.visible = true; }); 
+            updateTree(); 
+            log("All entities visible.", "eye");
+        }
 
         function setupInteraction() {
             const c = document.getElementById('canvas-container');
@@ -530,11 +593,19 @@
             });
         }
 
-        function log(m) {
+        function log(m, icon = "info") {
             const l = document.getElementById('log');
             const d = document.createElement('div');
-            d.innerHTML = `<span class="text-stone-400 font-bold mr-2">[${new Date().toLocaleTimeString([], {hour12:false})}]</span> ${m}`;
+            const isSpin = icon === "loader" ? "loader-spin" : "";
+            d.className = "flex items-start animate-in slide-in-from-left duration-200";
+            d.innerHTML = `
+                <span class="text-stone-300 font-bold mr-2 whitespace-nowrap">[${new Date().toLocaleTimeString([], {hour12:false})}]</span>
+                <i data-lucide="${icon}" class="w-3 h-3 mr-2 mt-0.5 text-stone-400 ${isSpin}"></i>
+                <span>${m}</span>
+            `;
             l.prepend(d);
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            if(l.childNodes.length > 40) l.lastChild.remove();
         }
 
         function setCameraView(v) {
