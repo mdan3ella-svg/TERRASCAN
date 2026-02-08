@@ -147,7 +147,6 @@
                 <!-- UNIQUE IMPORT BUTTON -->
                 <button onclick="triggerImport()" class="ingest-btn tooltip" data-tip="Ingest Spatial Model (OBJ/IFC)">
                     <div class="relative w-6 h-6 flex items-center justify-center">
-                        <!-- Custom Ingest Icon SVG -->
                         <svg viewBox="0 0 24 24" class="w-6 h-6 fill-none stroke-current stroke-2">
                             <path d="M12 3v13M12 16l-4-4M12 16l4-4" />
                             <path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4" />
@@ -205,9 +204,8 @@
             <!-- Central Viewport & Command Center -->
             <div class="flex-1 relative" id="viewport-container">
                 
-                <!-- Bottom Command Center (Rethought) -->
+                <!-- Bottom Command Center -->
                 <div class="absolute bottom-12 left-1/2 -translate-x-1/2 glass-panel p-4 rounded-[3rem] flex items-center gap-8 shadow-2xl border-stone-400/20">
-                    <!-- Nav Cluster -->
                     <div class="flex gap-2.5">
                         <button onclick="setCameraView('top')" class="control-btn tooltip" data-tip="Top View"><i data-lucide="layout-grid" class="w-5 h-5"></i></button>
                         <button onclick="setCameraView('front')" class="control-btn tooltip" data-tip="Front Elevation"><i data-lucide="columns" class="w-5 h-5"></i></button>
@@ -216,7 +214,6 @@
                     
                     <div class="h-10 w-px bg-stone-300"></div>
 
-                    <!-- Scan Cluster -->
                     <div class="flex gap-2.5">
                         <button onclick="toggleGrid()" id="btn-grid" class="control-btn active tooltip" data-tip="Toggle Spatial Grid"><i data-lucide="grid-3x3" class="w-5 h-5"></i></button>
                         <button onclick="toggleSection()" id="btn-section" class="control-btn tooltip" data-tip="Cross-Section Cut"><i data-lucide="slice" class="w-5 h-5"></i></button>
@@ -274,7 +271,7 @@
 
                 <!-- Event Journal -->
                 <div class="glass-panel p-7 rounded-[3rem] flex-1 flex flex-col shadow-sm overflow-hidden">
-                    <div class="flex justify-between items-center mb-6">
+                    <div class="flex justify-between items-center mb-4">
                         <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-400">Telemetry Log</h2>
                         <button onclick="document.getElementById('log').innerHTML=''" class="text-stone-300 hover:text-stone-900 transition"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button>
                     </div>
@@ -295,7 +292,7 @@
             </div>
         </div>
 
-        <!-- Infrastructure Status Footer -->
+        <!-- Footer -->
         <div class="mt-8 flex justify-between items-center text-[10px] text-stone-400 font-mono font-bold tracking-[0.2em] uppercase border-t border-stone-300/40 pt-6">
             <div class="flex items-center gap-12">
                 <div class="flex items-center gap-3 text-stone-900">
@@ -327,6 +324,10 @@
         let soilLayers = [];
         let selectedEntityId = null;
         
+        // Practical limit constants
+        const MAX_SAFE_SIZE_MB = 50; 
+        const RISK_THRESHOLD_MB = 100;
+
         const LITHOLOGY = [
             { name: 'Organic Horizon', depth: 2, color: 0x57534e },
             { name: 'Consolidated Silt', depth: 10, color: 0xa8a29e },
@@ -350,15 +351,12 @@
             renderer.localClippingEnabled = true;
             document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-            // Controls Initialization
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
             controls.dampingFactor = 0.1;
-            controls.autoRotate = false;
 
             setCameraView('iso');
 
-            // Lighting Setup
             const amb = new THREE.AmbientLight(0xffffff, 0.7);
             scene.add(amb);
             const directional = new THREE.DirectionalLight(0xffffff, 0.8);
@@ -374,7 +372,6 @@
             bimModel = new THREE.Group();
             scene.add(bimModel);
 
-            // Baseline Professional Geometry
             addBIMComponent('MASTER_FOUNDATION_01', 'IfcSlab', 'C35_Reinforced_Concrete', new THREE.Vector3(0, 12, 0), new THREE.Vector3(160, 6, 100));
 
             setupInteractionHub();
@@ -393,11 +390,7 @@
                 vertices[i+2] = Math.sin(x * 0.005) * Math.cos(y * 0.005) * 30 + (Math.random() * 2);
             }
             geo.computeVertexNormals();
-            const mat = new THREE.MeshStandardMaterial({ 
-                color: 0xd6d3d1, 
-                roughness: 0.95, 
-                clippingPlanes: [clippingPlane] 
-            });
+            const mat = new THREE.MeshStandardMaterial({ color: 0xd6d3d1, roughness: 0.95, clippingPlanes: [clippingPlane] });
             terrain = new THREE.Mesh(geo, mat);
             terrain.rotation.x = -Math.PI/2;
             terrain.receiveShadow = true;
@@ -406,12 +399,7 @@
             let depthCounter = 0;
             LITHOLOGY.forEach(layer => {
                 const lGeo = new THREE.BoxGeometry(1500, layer.depth, 1500);
-                const lMat = new THREE.MeshStandardMaterial({ 
-                    color: layer.color, 
-                    transparent: true, 
-                    opacity: 0.8, 
-                    clippingPlanes: [clippingPlane] 
-                });
+                const lMat = new THREE.MeshStandardMaterial({ color: layer.color, transparent: true, opacity: 0.8, clippingPlanes: [clippingPlane] });
                 const lMesh = new THREE.Mesh(lGeo, lMat);
                 lMesh.position.y = - (depthCounter + layer.depth/2) - 15;
                 lMesh.visible = false;
@@ -431,13 +419,10 @@
             activeWorkspace = ws;
             const btnStates = ['survey', 'design', 'analysis'];
             btnStates.forEach(m => document.getElementById(`ws-${m}`).classList.toggle('active', m === ws));
-
             document.getElementById('survey-controls').classList.toggle('hidden', ws !== 'survey');
             document.getElementById('analysis-controls').classList.toggle('hidden', ws !== 'analysis');
-
             if (terrain && terrain.material) terrain.material.wireframe = (ws === 'survey');
             if (bimModel) bimModel.visible = (ws !== 'survey');
-
             log(`Workspace Transition: [${ws.toUpperCase()}]`, "refresh-cw");
         }
 
@@ -489,8 +474,6 @@
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
-        // --- Model Import Engine ---
-
         function triggerImport() { document.getElementById('file-input').click(); }
 
         function handleFileSelect(e) {
@@ -499,22 +482,33 @@
 
             Array.from(files).forEach(file => {
                 const ext = file.name.split('.').pop().toLowerCase();
-                log(`Mounting Archive: ${file.name}`, "upload");
+                const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
                 
+                log(`Mounting Archive: ${file.name} (${sizeMB} MB)`, "upload");
+                
+                // Pre-flight check
+                if (sizeMB > RISK_THRESHOLD_MB) {
+                    log(`CRITICAL: File exceeds ${RISK_THRESHOLD_MB}MB. High risk of browser glitch.`, "alert-octagon");
+                    // Continue anyway but warn
+                } else if (sizeMB > MAX_SAFE_SIZE_MB) {
+                    log(`WARN: File larger than ${MAX_SAFE_SIZE_MB}MB. Performance may degrade.`, "alert-triangle");
+                }
+
                 const reader = new FileReader();
                 reader.onload = (ev) => {
                     if (ext === 'obj') parseOBJ(ev.target.result, file.name);
                     else if (ext === 'ifc') parseIFC(ev.target.result, file.name);
                 };
+                
                 if (ext === 'obj' || ext === 'ifc') reader.readAsText(file);
-                else log(`Format [.${ext}] not supported by Kernel.`, "alert-triangle");
+                else log(`Format [.${ext}] not supported. Use .obj or .ifc`, "alert-circle");
             });
             e.target.value = '';
         }
 
         function parseOBJ(data, filename) {
-            log(`Reconstructing Geometry: ${filename}`, "loader");
-            if (typeof THREE.OBJLoader === 'undefined') { log("Kernel Failure: OBJLoader not indexed.", "alert-octagon"); return; }
+            log(`Reconstructing Geometry...`, "loader");
+            if (typeof THREE.OBJLoader === 'undefined') { log("FATAL: OBJLoader missing.", "alert-octagon"); return; }
 
             const loader = new THREE.OBJLoader();
             try {
@@ -529,39 +523,37 @@
                     }
                 });
                 updateTree();
-                log(`Success: Element ${filename} online.`, "check-circle-2");
-            } catch (err) { log("Parse Integrity Failure on Ingest.", "x-circle"); }
+                log(`Ingest Complete: ${filename}`, "check-circle-2");
+            } catch (err) { 
+                log("Parse Integrity Failure. Try decimated mesh.", "x-circle"); 
+                console.error(err);
+            }
         }
 
         function parseIFC(data, filename) {
             log(`Mapping IFC Classes: ${filename}`, "scan");
             const entities = (data.match(/IFCCOLUMN|IFCWALL|IFCSLAB/g) || []);
-            
-            // Generate Proxy Representations
             const sampleSize = Math.min(entities.length, 6);
             for(let i=0; i<sampleSize; i++) {
-                addBIMComponent(`${filename}_P${i}`, entities[i], 'IFC_Verified_Spec', 
+                addBIMComponent(`${filename}_Node_${i}`, entities[i], 'IFC_Verified_Spec', 
                     new THREE.Vector3(Math.random()*80-40, 20, Math.random()*80-40), 
                     new THREE.Vector3(10, 15, 10));
             }
-            log(`IFC Verified: ${entities.length} nodes cataloged.`, "check-circle-2");
+            log(`IFC Mapping Finished. ${entities.length} total nodes in source.`, "check-circle-2");
         }
 
         function runFEA() {
             if(isSolving || !bimModel.children.length) return;
             isSolving = true;
             log("FEA: Running Adaptive Structural Solver...", "zap");
-            
             let progress = 0;
             const timer = setInterval(() => {
                 progress += 0.5;
                 const stress = (progress * 13.75).toFixed(2);
                 document.getElementById('val-stress').innerText = stress + " MPa";
-                
                 const safety = Math.max(0, 100 - (progress * 9)).toFixed(0);
                 document.getElementById('val-safety').innerText = safety + "%";
                 document.getElementById('safety-fill').style.width = safety + "%";
-                
                 bimModel.children.forEach(m => {
                     if(m.isMesh) {
                         const start = new THREE.Color(0x6b7280);
@@ -569,19 +561,13 @@
                         m.material.color.copy(start.lerp(danger, progress/10));
                     }
                 });
-
-                if(progress >= 10) {
-                    clearInterval(timer);
-                    isSolving = false;
-                    log(`Solve Finalized. Localized Peak: ${stress} MPa.`, "info");
-                }
+                if(progress >= 10) { clearInterval(timer); isSolving = false; log(`Solve Finalized. Peak: ${stress} MPa.`, "info"); }
             }, 80);
         }
 
         function inspectElement(ent) {
             selectedEntityId = ent.id;
             updateTree();
-
             const p = document.getElementById('property-panel');
             p.innerHTML = `
                 <div class="space-y-6 fade-in-up">
@@ -590,30 +576,22 @@
                         <div class="font-mono text-[9px] break-all leading-relaxed">${ent.id}</div>
                     </div>
                     <div class="space-y-2">
-                        <div class="p-4 bg-white border border-stone-200 rounded-2xl flex justify-between items-center shadow-sm">
+                        <div class="p-4 bg-white border border-stone-200 rounded-2xl flex justify-between items-center">
                             <span class="text-stone-400 uppercase text-[9px] font-black tracking-[0.2em]">Class</span>
                             <span class="text-[10px] font-black">${ent.type}</span>
                         </div>
-                        <div class="p-4 bg-white border border-stone-200 rounded-2xl flex justify-between items-center shadow-sm">
+                        <div class="p-4 bg-white border border-stone-200 rounded-2xl flex justify-between items-center">
                             <span class="text-stone-400 uppercase text-[9px] font-black tracking-[0.2em]">Material</span>
                             <span class="text-[10px] font-black">${ent.material}</span>
                         </div>
-                        <div class="p-4 bg-white border border-stone-200 rounded-2xl flex justify-between items-center shadow-sm">
-                            <span class="text-stone-400 uppercase text-[9px] font-black tracking-[0.2em]">Mass</span>
-                            <span class="text-[10px] font-black">${ent.weight}</span>
-                        </div>
                     </div>
-                </div>
-            `;
-
+                </div>`;
             bimModel.children.forEach(m => {
                 const match = m.userData.id === ent.id;
                 m.material.emissive.set(match ? 0x0891b2 : 0x000000);
                 m.material.emissiveIntensity = 0.6;
             });
         }
-
-        // --- Utility Cluster ---
 
         function updateStrataView(v) {
             document.getElementById('val-strata').innerText = parseFloat(v).toFixed(1) + "m";
@@ -635,7 +613,6 @@
 
         function clearEntities() { bimModel.clear(); updateTree(); log("Scene Domain Reset.", "trash-2"); }
         function showAllEntities() { bimModel.children.forEach(c => { c.visible = true; c.userData.visible = true; }); updateTree(); }
-
         function toggleGrid() { gridHelper.visible = !gridHelper.visible; document.getElementById('btn-grid').classList.toggle('active'); }
         function toggleSection() {
             sectionActive = !sectionActive;
@@ -710,7 +687,6 @@
             }
         });
 
-        // Interface persistence
         window.saveProject = function() {
             const state = { strata: document.getElementById('input-strata')?.value || 0, mode: activeWorkspace };
             localStorage.setItem('terrascan_pro_73', JSON.stringify(state));
