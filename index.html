@@ -70,8 +70,24 @@
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 10px; }
         
-        .scan-line { position: absolute; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, var(--ws-accent), transparent); box-shadow: 0 0 25px var(--ws-accent); animation: scan 5s ease-in-out infinite; display: none; z-index: 10; }
-        @keyframes scan { 0% { top: 0%; opacity: 0; } 50% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+        /* Fixed Scan Line Animation */
+        .scan-line { 
+            position: absolute; 
+            width: 100%; 
+            height: 4px; 
+            left: 0;
+            background: linear-gradient(90deg, transparent, var(--ws-accent), transparent); 
+            box-shadow: 0 0 30px var(--ws-accent), 0 0 60px var(--ws-accent); 
+            opacity: 0;
+            z-index: 50; 
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .scan-active {
+            animation: scan-move 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            opacity: 0.6;
+        }
+        @keyframes scan-move { 0% { top: 0%; } 50% { top: 100%; } 100% { top: 0%; } }
 
         .gauge-container { @apply h-1.5 w-full bg-stone-200 rounded-full overflow-hidden mt-3; }
         .gauge-fill { @apply h-full transition-all duration-100 ease-linear; background: var(--ws-accent); }
@@ -180,7 +196,7 @@
 
     <!-- Main Workspace -->
     <div id="canvas-container"></div>
-    <div id="scan-bar" class="scan-line"></div>
+    <div id="main-scan-line" class="scan-line"></div>
 
     <div class="ui-overlay absolute inset-0 flex flex-col p-8 pointer-events-none opacity-0" id="main-ui">
         <!-- Main Top Bar -->
@@ -356,6 +372,7 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             renderer.shadowMap.enabled = true;
+            renderer.localClippingEnabled = true;
             document.getElementById('canvas-container').appendChild(renderer.domElement);
 
             controls = new THREE.OrbitControls(camera, renderer.domElement);
@@ -490,7 +507,7 @@
         }
 
         function addBIMComponent(name, type, material, pos, scale) {
-            const mesh = new THREE.Mesh(new THREE.BoxGeometry(scale.x, scale.y, scale.z), new THREE.MeshStandardMaterial({ color: 0x6b7280, roughness: 0.5, metalness: 0.2 }));
+            const mesh = new THREE.Mesh(new THREE.BoxGeometry(scale.x, scale.y, scale.z), new THREE.MeshStandardMaterial({ color: 0x6b7280, roughness: 0.5, metalness: 0.2, clippingPlanes: [clippingPlane] }));
             mesh.position.copy(pos); mesh.castShadow = true;
             mesh.userData = { id: 'TS_'+Math.random().toString(36).substr(2,4).toUpperCase(), name, type, material, visible: true };
             bimModel.add(mesh);
@@ -527,7 +544,7 @@
                 reader.onload = (ev) => { if (file.name.toLowerCase().endsWith('.obj')) parseOBJ(ev.target.result, file.name); };
                 reader.readAsText(file);
             });
-            e.target.value = ''; // Reset
+            e.target.value = ''; 
         }
 
         function parseOBJ(data, filename) {
@@ -545,7 +562,7 @@
                 
                 obj.traverse(c => {
                     if (c.isMesh) {
-                        c.material = new THREE.MeshStandardMaterial({ color: 0x6b7280 });
+                        c.material = new THREE.MeshStandardMaterial({ color: 0x6b7280, clippingPlanes: [clippingPlane] });
                     }
                 });
                 bimModel.add(obj);
@@ -560,6 +577,11 @@
             if(isSolving || !bimModel.children.length) return;
             isSolving = true;
             log("FEA: SOLVING ADAPTIVE MESH...", "zap");
+            
+            // Activate Scan Line
+            const scanBar = document.getElementById('main-scan-line');
+            scanBar.classList.add('scan-active');
+
             let p = 0;
             const t = setInterval(() => {
                 p += 0.5;
@@ -568,8 +590,19 @@
                 const safety = Math.max(0, 100 - (p * 8)).toFixed(0);
                 document.getElementById('val-safety').innerText = safety + "%";
                 document.getElementById('safety-fill').style.width = safety + "%";
-                bimModel.children.forEach(m => { if(m.isMesh || m.type === 'Group') m.traverse(node => { if(node.isMesh) node.material.color.lerp(new THREE.Color(0xd97706), 0.05); }); });
-                if(p >= 10) { clearInterval(t); isSolving = false; log(`SOLVE COMPLETE: Peak Stress ${stress} MPa.`, "info"); }
+                
+                bimModel.children.forEach(m => { 
+                    m.traverse(node => { 
+                        if(node.isMesh) node.material.color.lerp(new THREE.Color(0xd97706), 0.05); 
+                    }); 
+                });
+
+                if(p >= 10) { 
+                    clearInterval(t); 
+                    isSolving = false; 
+                    scanBar.classList.remove('scan-active');
+                    log(`SOLVE COMPLETE: Peak Stress ${stress} MPa.`, "info"); 
+                }
             }, 80);
         }
 
@@ -581,7 +614,7 @@
             p.innerHTML = `
                 <div class="space-y-6 fade-in-up">
                     <div class="p-5 bg-stone-900 text-stone-100 rounded-[1.75rem] border-l-4" style="border-color: var(--ws-accent);">
-                        <span class="text-[9px] font-black uppercase text-stone-500 mb-2 block">System GUID</span>
+                        <span class="text-[9px] font-black uppercase text-stone-500 mb-2 block tracking-widest">System GUID</span>
                         <div class="font-mono text-[9px] break-all leading-tight">${ent.id}</div>
                     </div>
                     <div class="space-y-2">
@@ -596,7 +629,6 @@
                     </div>
                 </div>`;
             
-            // Highlight and Focus
             bimModel.children.forEach(m => { 
                 const isSelected = m.userData.id === ent.id;
                 m.traverse(node => {
@@ -609,7 +641,7 @@
                     const bbox = new THREE.Box3().setFromObject(m);
                     const center = new THREE.Vector3();
                     bbox.getCenter(center);
-                    controls.target.copy(center);
+                    controls.target.lerp(center, 0.1);
                     controls.update();
                 }
             });
@@ -624,20 +656,41 @@
         }
 
         function toggleGrid() { gridHelper.visible = !gridHelper.visible; document.getElementById('btn-grid').classList.toggle('active'); }
-        function toggleSection() { sectionActive = !sectionActive; document.getElementById('btn-section').classList.toggle('active'); clippingPlane.constant = sectionActive ? 0 : 2000; clippingPlane.normal.set(1,0,0); }
-        function toggleXray() { xrayActive = !xrayActive; document.getElementById('btn-xray').classList.toggle('active'); bimModel.children.forEach(m => { m.traverse(node => { if(node.isMesh) { node.material.transparent = xrayActive; node.material.opacity = xrayActive ? 0.35 : 1.0; node.material.wireframe = xrayActive; } }); }); }
+        
+        function toggleSection() { 
+            sectionActive = !sectionActive; 
+            document.getElementById('btn-section').classList.toggle('active'); 
+            clippingPlane.constant = sectionActive ? 0 : 5000; 
+            clippingPlane.normal.set(1,0,0); 
+            log(`SECTION_PLANE: ${sectionActive ? 'ENGAGED' : 'RETRACTED'}`, "slice");
+        }
+
+        function toggleXray() { 
+            xrayActive = !xrayActive; 
+            document.getElementById('btn-xray').classList.toggle('active'); 
+            bimModel.children.forEach(m => { 
+                m.traverse(node => { 
+                    if(node.isMesh) { 
+                        node.material.transparent = xrayActive; 
+                        node.material.opacity = xrayActive ? 0.35 : 1.0; 
+                        node.material.wireframe = xrayActive; 
+                    } 
+                }); 
+            }); 
+            log(`SCAN_MODE: ${xrayActive ? 'X-RAY_ACTIVE' : 'SOLID_VISUAL'}`, "scan-line");
+        }
         
         function showAllEntities() {
             bimModel.children.forEach(m => { m.visible = true; m.userData.visible = true; });
             updateTree();
-            log("Visibility states reset to visible.", "eye");
+            log("Visibility reset for project domain.", "eye");
         }
 
         function clearEntities() {
             bimModel.clear();
             updateTree();
             document.getElementById('property-panel').innerHTML = '';
-            log("Scene domain purged of all BIM entities.", "trash-2");
+            log("Project hierarchy purged.", "trash-2");
         }
 
         function toggleVisibility(id, e) {
@@ -657,19 +710,21 @@
                 bimModel.remove(c);
                 updateTree();
                 if(selectedEntityId === id) document.getElementById('property-panel').innerHTML = '';
-                log(`REMOVED: ${c.userData.name}`, "trash-2");
+                log(`PURGED: ${c.userData.name}`, "trash-2");
             }
         }
 
         function updateStrataView(v) {
             document.getElementById('val-strata').innerText = parseFloat(v).toFixed(1) + "m";
-            document.getElementById('scan-bar').style.display = (v > 0 ? 'block' : 'none');
+            const scanBar = document.getElementById('main-scan-line');
+            if(parseFloat(v) > 0) scanBar.classList.add('scan-active');
+            else scanBar.classList.remove('scan-active');
         }
 
         function log(m, icon = "info") {
             const l = document.getElementById('log'); if(!l) return;
             const d = document.createElement('div');
-            d.className = "flex items-start border-b border-stone-200 pb-3 transition-all";
+            d.className = "flex items-start border-b border-stone-200 pb-3 transition-all animate-in slide-in-from-left";
             d.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4 mr-3 text-stone-400"></i><span class="text-[11px] leading-snug">${m}</span>`;
             l.prepend(d); if (typeof lucide !== 'undefined') lucide.createIcons();
         }
