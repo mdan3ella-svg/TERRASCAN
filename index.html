@@ -319,14 +319,22 @@
             scene = new THREE.Scene(); scene.background = new THREE.Color(0xe7e5e4); 
             scene.fog = new THREE.FogExp2(0xe7e5e4, 0.0004);
             camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.5, 100000);
+            
             renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             renderer.shadowMap.enabled = true;
             renderer.localClippingEnabled = true;
-            document.getElementById('canvas-container').appendChild(renderer.domElement);
-            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            
+            const container = document.getElementById('canvas-container');
+            container.appendChild(renderer.domElement);
+
+            // OrbitControls attached to container for better event handling
+            controls = new THREE.OrbitControls(camera, container);
             controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.screenSpacePanning = true; // Essential for BIM/Engineering navigation
+            
             setCameraView('iso');
 
             scene.add(new THREE.AmbientLight(0xffffff, 0.7));
@@ -344,6 +352,8 @@
             searchDatabase(""); // Initial Load
             animate();
             if (typeof lucide !== 'undefined') lucide.createIcons();
+            
+            logActivity("Session Boot Successful", "BOOT_READY");
         }
 
         // --- Database Searching ---
@@ -434,6 +444,11 @@
             log("UNDO: Last spatial operation reversed.", "rotate-ccw");
         }
 
+        function logActivity(message, code) {
+            activityLedger.push({ time: new Date().toISOString(), message, code });
+            log(message, code === 'BOOT_READY' ? 'shield-check' : 'info');
+        }
+
         function exportProjectAudit() {
             log("SERIALIZING PROJECT REPORT...", "file-text");
             const report = `TERRASCAN ENGINEERING REPORT\nBUILD 7.7.2 PRO\nEntities Detected: ${bimModel.children.length}\nDate: ${new Date().toISOString()}`;
@@ -504,7 +519,8 @@
                 m.traverse(node => { if(node.isMesh) { node.material.emissive.set(isSelected ? 0x0891b2 : 0x000000); node.material.emissiveIntensity = 0.6; } });
                 if(isSelected) {
                     const bbox = new THREE.Box3().setFromObject(m); const center = new THREE.Vector3(); bbox.getCenter(center);
-                    controls.target.lerp(center, 0.1); controls.update();
+                    controls.target.copy(center); // Immediate focal focus on centroid
+                    controls.update();
                 }
             });
         }
@@ -562,12 +578,18 @@
             if(!demoRenderer) return; requestAnimationFrame(animateDemo);
             scanY += 0.12 * scanDir; if(scanY > 50 || scanY < 0) scanDir *= -1;
             demoScanner.position.y = scanY;
+            
+            // Safety Null Checks for Telemetry DOM
             const hVal = document.getElementById('demo-height-val');
             const pFill = document.getElementById('demo-progress-fill');
             const dStatus = document.getElementById('demo-status');
+            const fVal = document.getElementById('demo-freq-val');
+
             if(hVal) hVal.innerText = `${scanY.toFixed(2)}m`;
             if(pFill) pFill.style.width = `${(scanY/50)*100}%`;
             if(dStatus) dStatus.innerText = scanDir > 0 ? "UPWARD SCAN..." : "DOWNWARD SCAN...";
+            if(fVal) fVal.innerText = `${(1.24 + Math.sin(scanY * 0.1) * 0.2).toFixed(2)} Hz`;
+
             demoBuilding.rotation.y += 0.0015; demoRenderer.render(demoScene, demoCamera);
         }
 
@@ -593,12 +615,12 @@
             if(v === 'iso') { camera.position.set(350, 300, 350); controls.target.set(0, 0, 0); }
             if(v === 'top') { camera.position.set(0, 1500, 0); controls.target.set(0, 0, 0); }
             if(v === 'front') { camera.position.set(0, 100, 1500); controls.target.set(0, 0, 0); }
-            camera.lookAt(0,0,0); controls.update();
+            controls.update();
         }
 
-        function toggleGrid() { gridHelper.visible = !gridHelper.visible; document.getElementById('btn-grid').classList.toggle('active'); }
-        function toggleSection() { sectionActive = !sectionActive; document.getElementById('btn-section').classList.toggle('active'); globalSectionPlane.constant = sectionActive ? 0 : 10000; }
-        function toggleXray() { xrayActive = !xrayActive; document.getElementById('btn-xray').classList.toggle('active'); bimModel.children.forEach(m => { m.traverse(node => { if(node.isMesh) { node.material.transparent = xrayActive; node.material.opacity = xrayActive ? 0.35 : 1.0; node.material.wireframe = xrayActive; } }); }); }
+        function toggleGrid() { if(gridHelper) gridHelper.visible = !gridHelper.visible; document.getElementById('btn-grid').classList.toggle('active'); }
+        function toggleSection() { sectionActive = !sectionActive; document.getElementById('btn-section').classList.toggle('active'); if(globalSectionPlane) globalSectionPlane.constant = sectionActive ? 0 : 10000; }
+        function toggleXray() { xrayActive = !xrayActive; document.getElementById('btn-xray').classList.toggle('active'); if(bimModel) bimModel.children.forEach(m => { m.traverse(node => { if(node.isMesh) { node.material.transparent = xrayActive; node.material.opacity = xrayActive ? 0.35 : 1.0; node.material.wireframe = xrayActive; } }); }); }
 
         function toggleVisibility(id, e) {
             e.stopPropagation();
@@ -612,7 +634,8 @@
         function clearEntities() {
             bimModel.clear();
             updateTree();
-            document.getElementById('property-panel').innerHTML = '';
+            const propPanel = document.getElementById('property-panel');
+            if(propPanel) propPanel.innerHTML = '';
             log("Project domain purged.", "trash-2");
         }
 
@@ -623,19 +646,46 @@
             l.prepend(d); if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
-        function animate() { requestAnimationFrame(animate); if (controls) controls.update(); renderer.render(scene, camera); }
+        function animate() { 
+            requestAnimationFrame(animate); 
+            if (controls) controls.update(); 
+            if(renderer && scene && camera) renderer.render(scene, camera); 
+        }
+
         function setupHandlers() {
             window.addEventListener('resize', () => {
-                if(camera && renderer) { camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); }
+                if(camera && renderer) { 
+                    camera.aspect = window.innerWidth/window.innerHeight; 
+                    camera.updateProjectionMatrix(); 
+                    renderer.setSize(window.innerWidth, window.innerHeight); 
+                }
             });
-            document.getElementById('canvas-container').addEventListener('mousemove', (e) => {
-                mouse.x = (e.clientX/window.innerWidth)*2-1; mouse.y = -(e.clientY/window.innerHeight)*2+1;
-                document.getElementById('coord-display').innerText = `LOCAL_REF: [${(mouse.x*800).toFixed(2)}, ${(mouse.y*800).toFixed(2)}, 0.00]`;
-            });
+            const canvContainer = document.getElementById('canvas-container');
+            if(canvContainer) {
+                canvContainer.addEventListener('mousemove', (e) => {
+                    const rect = canvContainer.getBoundingClientRect();
+                    mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                    mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+                    const coordEl = document.getElementById('coord-display');
+                    if(coordEl) coordEl.innerText = `LOCAL_REF: [${(mouse.x*800).toFixed(2)}, ${(mouse.y*800).toFixed(2)}, 0.00]`;
+                });
+                canvContainer.addEventListener('mousedown', () => {
+                    if(!camera) return;
+                    raycaster.setFromCamera(mouse, camera); 
+                    const hits = raycaster.intersectObjects(bimModel.children, true);
+                    if(hits.length > 0) { 
+                        let t = hits[0].object; while(t && !t.userData.id && t.parent) t = t.parent; 
+                        if(t && t.userData.id) inspectElement(t.userData); 
+                    }
+                });
+            }
         }
 
         window.onload = init;
-        window.triggerImport = () => document.getElementById('file-input').click();
+        window.triggerImport = () => {
+            const input = document.getElementById('file-input');
+            if(input) input.click();
+        };
     </script>
 </body>
 </html>
