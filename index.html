@@ -62,7 +62,7 @@
         .workspace-btn.active i { color: var(--ws-accent); }
 
         .control-btn { @apply p-3.5 rounded-[1.25rem] bg-white border border-stone-300 hover:border-stone-500 hover:shadow-xl transition-all duration-300 text-stone-600 active:scale-90 flex items-center justify-center; }
-        .control-btn.active { background: var(--ws-accent); color: white !important; border-color: var(--ws-accent); }
+        .control-btn.active { background: var(--ws-accent) !important; color: white !important; border-color: var(--ws-accent); }
 
         .ingest-btn { @apply flex items-center gap-3 text-stone-100 pl-4 pr-6 py-2.5 rounded-2xl transition-all shadow-lg active:scale-95; background: var(--ws-accent); }
         .ingest-btn:hover { filter: brightness(1.2); }
@@ -84,7 +84,7 @@
         .fade-in-up { animation: fadeInUp 0.4s ease-out; }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .bim-node { @apply transition-all duration-200 border border-transparent rounded-2xl mb-1; }
+        .bim-node { @apply transition-all duration-200 border border-transparent rounded-2xl mb-1 cursor-pointer; }
         .bim-node:hover { @apply bg-stone-200/60 border-stone-300; }
         .bim-node.selected { @apply bg-white shadow-md; border-color: var(--ws-accent); }
     </style>
@@ -249,7 +249,7 @@
                     <!-- Navigation Cluster -->
                     <div class="flex gap-3">
                         <button onclick="setCameraView('top')" class="control-btn tooltip" data-tip="Plan View (Top-Down)"><i data-lucide="layout-grid" class="w-5 h-5"></i></button>
-                        <button onclick="setCameraView('front')" class="control-btn tooltip" data-tip="Structural Elevation (Front)"><i data-lucide="columns" class="w-5 h-5"></i></button>
+                        <button onclick="setCameraView('front')" class="control-btn tooltip" data-tip="Orthographic Elevation (Front)"><i data-lucide="columns" class="w-5 h-5"></i></button>
                         <button onclick="setCameraView('iso')" class="control-btn tooltip" data-tip="Reset to Home Isometric"><i data-lucide="maximize" class="w-5 h-5"></i></button>
                     </div>
                     
@@ -258,7 +258,7 @@
                     <!-- Analysis Tools -->
                     <div class="flex gap-3">
                         <button onclick="toggleGrid()" id="btn-grid" class="control-btn active tooltip" data-tip="Toggle Spatial Reference Grid"><i data-lucide="grid-3x3" class="w-5 h-5"></i></button>
-                        <button onclick="toggleSection()" id="btn-section" class="control-btn tooltip" data-tip="Activate Cross-Sectional Plane"><i data-lucide="slice" class="w-5 h-5"></i></button>
+                        <button onclick="toggleSection()" id="btn-section" class="control-btn tooltip" data-tip="Activate Volumetric Section Plane"><i data-lucide="slice" class="w-5 h-5"></i></button>
                         <button onclick="toggleXray()" id="btn-xray" class="control-btn tooltip" data-tip="Engage Structural X-Ray Mode"><i data-lucide="scan-line" class="w-5 h-5"></i></button>
                     </div>
                 </div>
@@ -474,7 +474,10 @@
             const labels = { survey: 'Geology', design: 'Structural', analysis: 'Civil Physics' };
             document.getElementById('active-discipline-label').innerText = labels[ws];
 
-            ['survey', 'design', 'analysis'].forEach(m => document.getElementById(`ws-${m}`).classList.toggle('active', m === ws));
+            ['survey', 'design', 'analysis'].forEach(m => {
+                const btn = document.getElementById(`ws-${m}`);
+                if(btn) btn.classList.toggle('active', m === ws);
+            });
             
             document.getElementById('survey-controls').classList.toggle('hidden', ws !== 'survey');
             document.getElementById('analysis-controls').classList.toggle('hidden', ws !== 'analysis');
@@ -509,7 +512,8 @@
                         <span class="text-[10px] font-black uppercase text-stone-800">${d.name}</span>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="toggleVisibility('${d.id}', event)"><i data-lucide="${d.visible ? 'eye' : 'eye-off'}" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="toggleVisibility('${d.id}', event)" class="p-1 hover:bg-stone-200 rounded-lg"><i data-lucide="${d.visible ? 'eye' : 'eye-off'}" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="deleteEntity('${d.id}', event)" class="p-1 hover:bg-red-50 hover:text-red-600 rounded-lg"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
                     </div>`;
                 tree.appendChild(node);
             });
@@ -520,28 +524,36 @@
             Array.from(e.target.files).forEach(file => {
                 const reader = new FileReader();
                 log(`INGESTING: ${file.name}...`, "upload");
-                reader.onload = (ev) => { if (file.name.endsWith('.obj')) parseOBJ(ev.target.result, file.name); };
+                reader.onload = (ev) => { if (file.name.toLowerCase().endsWith('.obj')) parseOBJ(ev.target.result, file.name); };
                 reader.readAsText(file);
             });
+            e.target.value = ''; // Reset
         }
 
         function parseOBJ(data, filename) {
             const loader = new THREE.OBJLoader();
-            const obj = loader.parse(data);
-            const bbox = new THREE.Box3().setFromObject(obj);
-            const center = new THREE.Vector3();
-            bbox.getCenter(center);
-            obj.position.sub(center); 
-            obj.position.y += 25; 
-            obj.traverse(c => {
-                if (c.isMesh) {
-                    c.material = new THREE.MeshStandardMaterial({ color: 0x6b7280 });
-                    c.userData = { id: 'OBJ_'+Date.now(), name: filename, type: 'Imported_Mesh', visible: true };
-                }
-            });
-            bimModel.add(obj);
-            updateTree();
-            log(`SUCCESS: ${filename} aligned to origin.`, "check-circle-2");
+            try {
+                const obj = loader.parse(data);
+                const bbox = new THREE.Box3().setFromObject(obj);
+                const center = new THREE.Vector3();
+                bbox.getCenter(center);
+                obj.position.sub(center); 
+                obj.position.y += 25; 
+                
+                const id = 'OBJ_'+Date.now();
+                obj.userData = { id, name: filename, type: 'Imported_Mesh', visible: true };
+                
+                obj.traverse(c => {
+                    if (c.isMesh) {
+                        c.material = new THREE.MeshStandardMaterial({ color: 0x6b7280 });
+                    }
+                });
+                bimModel.add(obj);
+                updateTree();
+                log(`SUCCESS: ${filename} aligned to origin.`, "check-circle-2");
+            } catch (err) {
+                log("FAIL: OBJ Reconstruction error.", "alert-triangle");
+            }
         }
 
         function runFEA() {
@@ -556,13 +568,15 @@
                 const safety = Math.max(0, 100 - (p * 8)).toFixed(0);
                 document.getElementById('val-safety').innerText = safety + "%";
                 document.getElementById('safety-fill').style.width = safety + "%";
-                bimModel.children.forEach(m => { if(m.isMesh) m.material.color.lerp(new THREE.Color(0xd97706), 0.05); });
+                bimModel.children.forEach(m => { if(m.isMesh || m.type === 'Group') m.traverse(node => { if(node.isMesh) node.material.color.lerp(new THREE.Color(0xd97706), 0.05); }); });
                 if(p >= 10) { clearInterval(t); isSolving = false; log(`SOLVE COMPLETE: Peak Stress ${stress} MPa.`, "info"); }
             }, 80);
         }
 
         function inspectElement(ent) {
-            selectedEntityId = ent.id; updateTree();
+            selectedEntityId = ent.id; 
+            updateTree();
+            
             const p = document.getElementById('property-panel');
             p.innerHTML = `
                 <div class="space-y-6 fade-in-up">
@@ -581,7 +595,24 @@
                         </div>
                     </div>
                 </div>`;
-            bimModel.children.forEach(m => { m.material.emissive.set(m.userData.id === ent.id ? 0x0891b2 : 0x000000); m.material.emissiveIntensity = 0.6; });
+            
+            // Highlight and Focus
+            bimModel.children.forEach(m => { 
+                const isSelected = m.userData.id === ent.id;
+                m.traverse(node => {
+                    if(node.isMesh) {
+                        node.material.emissive.set(isSelected ? 0x0891b2 : 0x000000);
+                        node.material.emissiveIntensity = 0.6;
+                    }
+                });
+                if(isSelected) {
+                    const bbox = new THREE.Box3().setFromObject(m);
+                    const center = new THREE.Vector3();
+                    bbox.getCenter(center);
+                    controls.target.copy(center);
+                    controls.update();
+                }
+            });
         }
 
         function setCameraView(v) {
@@ -594,8 +625,42 @@
 
         function toggleGrid() { gridHelper.visible = !gridHelper.visible; document.getElementById('btn-grid').classList.toggle('active'); }
         function toggleSection() { sectionActive = !sectionActive; document.getElementById('btn-section').classList.toggle('active'); clippingPlane.constant = sectionActive ? 0 : 2000; clippingPlane.normal.set(1,0,0); }
-        function toggleXray() { xrayActive = !xrayActive; document.getElementById('btn-xray').classList.toggle('active'); bimModel.children.forEach(m => { if(m.isMesh) { m.material.transparent = xrayActive; m.material.opacity = xrayActive ? 0.35 : 1.0; m.material.wireframe = xrayActive; } }); }
+        function toggleXray() { xrayActive = !xrayActive; document.getElementById('btn-xray').classList.toggle('active'); bimModel.children.forEach(m => { m.traverse(node => { if(node.isMesh) { node.material.transparent = xrayActive; node.material.opacity = xrayActive ? 0.35 : 1.0; node.material.wireframe = xrayActive; } }); }); }
         
+        function showAllEntities() {
+            bimModel.children.forEach(m => { m.visible = true; m.userData.visible = true; });
+            updateTree();
+            log("Visibility states reset to visible.", "eye");
+        }
+
+        function clearEntities() {
+            bimModel.clear();
+            updateTree();
+            document.getElementById('property-panel').innerHTML = '';
+            log("Scene domain purged of all BIM entities.", "trash-2");
+        }
+
+        function toggleVisibility(id, e) {
+            e.stopPropagation();
+            const c = bimModel.children.find(x => x.userData.id === id);
+            if(c) {
+                c.visible = !c.visible;
+                c.userData.visible = c.visible;
+                updateTree();
+            }
+        }
+
+        function deleteEntity(id, e) {
+            e.stopPropagation();
+            const c = bimModel.children.find(x => x.userData.id === id);
+            if(c) {
+                bimModel.remove(c);
+                updateTree();
+                if(selectedEntityId === id) document.getElementById('property-panel').innerHTML = '';
+                log(`REMOVED: ${c.userData.name}`, "trash-2");
+            }
+        }
+
         function updateStrataView(v) {
             document.getElementById('val-strata').innerText = parseFloat(v).toFixed(1) + "m";
             document.getElementById('scan-bar').style.display = (v > 0 ? 'block' : 'none');
@@ -604,7 +669,7 @@
         function log(m, icon = "info") {
             const l = document.getElementById('log'); if(!l) return;
             const d = document.createElement('div');
-            d.className = "flex items-start border-b border-stone-200 pb-3";
+            d.className = "flex items-start border-b border-stone-200 pb-3 transition-all";
             d.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4 mr-3 text-stone-400"></i><span class="text-[11px] leading-snug">${m}</span>`;
             l.prepend(d); if (typeof lucide !== 'undefined') lucide.createIcons();
         }
@@ -624,6 +689,15 @@
             c.addEventListener('mousemove', (e) => {
                 mouse.x = (e.clientX / window.innerWidth) * 2 - 1; mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
                 document.getElementById('coord-display').innerText = `LOCAL_REF: [${(mouse.x*800).toFixed(2)}, ${(mouse.y*800).toFixed(2)}, 0.00]`;
+            });
+            c.addEventListener('mousedown', () => {
+                raycaster.setFromCamera(mouse, camera); 
+                const hits = raycaster.intersectObjects(bimModel.children, true);
+                if(hits.length > 0) { 
+                    let t = hits[0].object; 
+                    while(t && !t.userData.id && t.parent) t = t.parent; 
+                    if(t && t.userData.id) inspectElement(t.userData); 
+                } else { selectedEntityId = null; updateTree(); }
             });
         }
 
