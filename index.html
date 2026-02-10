@@ -128,9 +128,9 @@
             </div>
 
             <div class="manual-section">
-                <h3 class="manual-title">Borehole Section Plane</h3>
+                <h3 class="manual-title">Project Work Management</h3>
                 <p class="manual-text">
-                    Located in the <strong class="text-stone-900">Survey Workspace</strong>. This logic physically slices through the terrain and structural pylon depths to reveal volumetric lithology horizons in real-time.
+                    The system automatically tracks all spatial modifications. Integrated <strong class="text-stone-900">Undo</strong> capabilities and an auto-generated <strong class="text-stone-900">Audit Ledger</strong> ensure full compliance for structural exports.
                 </p>
             </div>
 
@@ -153,6 +153,7 @@
         <div class="loader-visual">
             <div id="failure-demo-container"></div>
             
+            <!-- Real-time Telemetry Overlay -->
             <div class="absolute top-12 left-12 flex flex-col gap-4">
                 <div class="glass-panel px-6 py-3 bg-white/90 border-stone-200 rounded-2xl flex items-center gap-6">
                     <div class="flex flex-col">
@@ -199,9 +200,9 @@
                 </div>
                 <div class="h-12 w-px bg-stone-300/60"></div>
                 <nav class="flex h-full items-end">
-                    <button onclick="switchWorkspace('survey')" id="ws-survey" class="workspace-btn active"><i data-lucide="compass" class="w-4 h-4"></i>Survey</button>
-                    <button onclick="switchWorkspace('design')" id="ws-design" class="workspace-btn"><i data-lucide="layers-2" class="w-4 h-4"></i>BIM Setup</button>
-                    <button onclick="switchWorkspace('analysis')" id="ws-analysis" class="workspace-btn"><i data-lucide="cpu" class="w-4 h-4"></i>Analysis</button>
+                    <button onclick="switchWorkspace('survey')" id="ws-survey" class="workspace-btn active" title="Geological & Topographic Survey"><i data-lucide="compass" class="w-4 h-4"></i>Survey</button>
+                    <button onclick="switchWorkspace('design')" id="ws-design" class="workspace-btn" title="Structural BIM Configuration"><i data-lucide="layers-2" class="w-4 h-4"></i>BIM Setup</button>
+                    <button onclick="switchWorkspace('analysis')" id="ws-analysis" class="workspace-btn" title="Civil FEA & Stress Analysis"><i data-lucide="cpu" class="w-4 h-4"></i>Analysis</button>
                 </nav>
             </div>
 
@@ -209,7 +210,7 @@
                 <div class="flex flex-col items-end px-4">
                     <div class="flex items-center gap-2">
                         <div class="w-2 h-2 rounded-full animate-pulse" style="background-color: var(--ws-accent);"></div>
-                        <span class="text-[8px] font-black text-stone-900 uppercase tracking-widest">Active Workspace</span>
+                        <span class="text-[8px] font-black text-stone-900 uppercase tracking-widest">Workspace Active</span>
                     </div>
                     <span id="active-discipline-label" class="text-[7px] text-stone-400 font-bold uppercase tracking-widest">Geology</span>
                 </div>
@@ -220,7 +221,9 @@
                     <span class="text-[10px] font-black uppercase tracking-widest">Ingest</span>
                 </button>
                 <div class="h-8 w-px bg-stone-300"></div>
-                <button onclick="exportIFC()" class="control-btn tooltip" data-tip="Generate Physical STEP IFC 2x3"><i data-lucide="share-2" class="w-5 h-5"></i></button>
+                <button onclick="exportProjectAudit()" class="bg-stone-900 text-stone-100 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition flex items-center gap-2 shadow-lg tooltip" data-tip="Export Project Report & Data">
+                    <i data-lucide="file-text" class="w-4 h-4"></i> Export
+                </button>
                 <input type="file" id="file-input" class="hidden" multiple onchange="handleFileSelect(event)">
             </div>
         </div>
@@ -232,6 +235,7 @@
                     <div class="flex justify-between items-center mb-8">
                         <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-400">Entities</h2>
                         <div class="flex gap-2">
+                             <button onclick="undoAction()" class="text-stone-400 hover:text-stone-900 transition tooltip" data-tip="Undo Last Action"><i data-lucide="rotate-ccw" class="w-4 h-4"></i></button>
                              <button onclick="showAllEntities()" class="text-stone-400 hover:text-stone-900 transition tooltip" data-tip="Restore Visibility"><i data-lucide="eye" class="w-4 h-4"></i></button>
                              <button onclick="clearEntities()" class="text-stone-400 hover:text-red-600 transition tooltip" data-tip="Purge Scene"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                         </div>
@@ -299,7 +303,7 @@
         <!-- Footer -->
         <div class="mt-8 flex justify-between items-center text-[10px] text-stone-500 font-mono font-bold tracking-[0.3em] uppercase pt-6 border-t border-stone-300/40">
             <span id="coord-display">LOCAL_REF: [00.00, 00.00, 0.00]</span>
-            <span>BUILD: 7.5.2_RE6</span>
+            <span>BUILD: 7.6.0_WM_EXPORT</span>
         </div>
     </div>
 
@@ -310,6 +314,11 @@
         let demoScene, demoCamera, demoRenderer, demoBuilding, demoScanner;
         let activeWorkspace = 'survey', isSolving = false, selectedEntityId = null;
         let sectionActive = false, xrayActive = false;
+
+        // Action Stack for Undo
+        let actionStack = [];
+        // Management Audit Trail
+        let projectActivityLedger = [];
 
         const DISCIPLINE_COLORS = { survey: '#065f46', design: '#1e40af', analysis: '#991b1b' };
 
@@ -339,32 +348,95 @@
             sun.castShadow = true;
             scene.add(sun);
 
-            // --- Clipping Plane Logic ---
-            globalSectionPlane = new THREE.Plane(new THREE.Vector3(1, 0, 0), 10000); // X-Axis
-            boreholePlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 10000);    // Y-Axis (Down)
+            globalSectionPlane = new THREE.Plane(new THREE.Vector3(1, 0, 0), 10000); 
+            boreholePlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 10000);   
 
             createTopography();
             bimModel = new THREE.Group();
             scene.add(bimModel);
 
-            addBIMComponent('MASTER_CORE_NODE', 'IfcSlab', 'Concrete_C40_PBR', new THREE.Vector3(0, 12, 0), new THREE.Vector3(160, 6, 100));
+            addBIMComponent('MASTER_CORE_NODE', 'IfcSlab', 'Concrete_C40_PBR', new THREE.Vector3(0, 12, 0), new THREE.Vector3(160, 6, 100), true);
 
             setupHandlers();
             animate();
             if (typeof lucide !== 'undefined') lucide.createIcons();
+            
+            logActivity("Session Initialized", "SYSTEM_BOOT");
         }
 
-        // --- Borehole Sectioning Engine ---
+        // --- Project Work Management & Undo Logic ---
+
+        function logActivity(message, actionCode) {
+            const timestamp = new Date().toISOString();
+            projectActivityLedger.push({ timestamp, message, actionCode });
+            log(message, actionCode === 'FEA_SOLVE' ? 'zap' : 'info');
+        }
+
+        function pushAction(action) {
+            actionStack.push(action);
+            if (actionStack.length > 50) actionStack.shift(); // Max 50 undos
+        }
+
+        function undoAction() {
+            if (actionStack.length === 0) {
+                log("No actions left to undo.", "alert-circle");
+                return;
+            }
+            const action = actionStack.pop();
+            logActivity(`UNDO: Reversed ${action.type} for ${action.target.userData.name}`, "UNDO_EVENT");
+
+            switch (action.type) {
+                case 'ADD':
+                    bimModel.remove(action.target);
+                    break;
+                case 'DELETE':
+                    bimModel.add(action.target);
+                    break;
+                case 'VISIBILITY':
+                    action.target.visible = action.oldState;
+                    action.target.userData.visible = action.oldState;
+                    break;
+            }
+            updateTree();
+        }
+
+        function exportProjectAudit() {
+            logActivity("Generating Project Management & Engineering Report", "EXPORT_REPORT");
+            
+            // 1. Generate Activity Ledger Report
+            let report = `TERRASCAN PROJECT ACTIVITY LEDGER\n`;
+            report += `====================================\n`;
+            report += `Project Generated: ${new Date().toLocaleString()}\n`;
+            report += `Total Entities: ${bimModel.children.length}\n\n`;
+            report += `TIMESTAMP | ACTIVITY LOG\n`;
+            report += `------------------------------------\n`;
+            projectActivityLedger.forEach(item => {
+                report += `[${item.timestamp}] ${item.message}\n`;
+            });
+
+            const blob = new Blob([report], {type:'text/plain'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `TERRASCAN_ACTIVITY_REPORT_${Date.now()}.txt`;
+            a.click();
+
+            // 2. Standard IFC Export (Mock)
+            log("SERIALIZING IFC STEP 2x3...", "share-2");
+            const ifcBlob = new Blob(["ISO-10303-21;HEADER;FILE_SCHEMA(('IFC2X3'));ENDSEC;DATA;ENDSEC;END-ISO-10303-21;"], {type:'text/plain'});
+            const ifcA = document.createElement('a');
+            ifcA.href = URL.createObjectURL(ifcBlob);
+            ifcA.download = `TS_BIM_PRO_${Date.now()}.ifc`;
+            ifcA.click();
+            
+            logActivity("Report and Model Export Complete", "EXPORT_SUCCESS");
+        }
+
+        // --- Core Workspace Functionality ---
 
         function updateBoreholeSection(v) {
             const depth = parseFloat(v);
             document.getElementById('val-strata').innerText = depth.toFixed(1) + "m";
-            
-            // Logic: Adjust Plane constant to slice terrain and BIM models
-            // Sitting at y=0, we slice downward.
             boreholePlane.constant = 25 - depth; 
-
-            // Trigger Scan Line visually
             const scanBar = document.getElementById('main-scan-line');
             if(depth > 0) scanBar.classList.add('scan-active');
             else scanBar.classList.remove('scan-active');
@@ -375,12 +447,8 @@
             const pos = geo.attributes.position.array;
             for(let i=0; i<pos.length; i+=3) pos[i+2] = Math.sin(pos[i]*0.008) * Math.cos(pos[i+1]*0.008) * 35;
             geo.computeVertexNormals();
-            
-            // Terrain responds to both borehole and global section planes
             terrain = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ 
-                color: 0xd6d3d1, 
-                roughness: 0.9, 
-                clippingPlanes: [globalSectionPlane, boreholePlane] 
+                color: 0xd6d3d1, roughness: 0.9, clippingPlanes: [globalSectionPlane, boreholePlane] 
             }));
             terrain.rotation.x = -Math.PI/2;
             scene.add(terrain);
@@ -395,33 +463,32 @@
             activeWorkspace = ws;
             const accent = DISCIPLINE_COLORS[ws];
             document.documentElement.style.setProperty('--ws-accent', accent);
-            
             const labels = { survey: 'Geology', design: 'Structural', analysis: 'Civil Physics' };
             document.getElementById('active-discipline-label').innerText = labels[ws];
             ['survey', 'design', 'analysis'].forEach(m => {
                 const btn = document.getElementById(`ws-${m}`);
                 if(btn) btn.classList.toggle('active', m === ws);
             });
-            
             document.getElementById('survey-controls').classList.toggle('hidden', ws !== 'survey');
             document.getElementById('analysis-controls').classList.toggle('hidden', ws !== 'analysis');
             if (terrain && terrain.material) terrain.material.wireframe = (ws === 'survey');
-            
             updateTree();
-            log(`MODE: [${ws.toUpperCase()}] DOMAIN AUTHORIZED.`, "refresh-cw");
+            logActivity(`Context Lock: ${ws.toUpperCase()}`, "WORKSPACE_SWITCH");
         }
 
-        function addBIMComponent(name, type, material, pos, scale) {
+        function addBIMComponent(name, type, material, pos, scale, suppressLog = false) {
             const mesh = new THREE.Mesh(new THREE.BoxGeometry(scale.x, scale.y, scale.z), new THREE.MeshStandardMaterial({ 
-                color: 0x6b7280, 
-                roughness: 0.5, 
-                metalness: 0.2, 
-                clippingPlanes: [globalSectionPlane, boreholePlane] 
+                color: 0x6b7280, roughness: 0.5, metalness: 0.2, clippingPlanes: [globalSectionPlane, boreholePlane] 
             }));
             mesh.position.copy(pos); mesh.castShadow = true;
             mesh.userData = { id: 'TS_PRO_'+Math.random().toString(36).substr(2,4).toUpperCase(), name, type, material, visible: true };
             bimModel.add(mesh);
             updateTree();
+            
+            if (!suppressLog) {
+                pushAction({ type: 'ADD', target: mesh });
+                logActivity(`Component Created: ${name}`, "ENTITY_ADD");
+            }
             return mesh;
         }
 
@@ -439,7 +506,7 @@
                         <span class="text-[10px] font-black uppercase text-stone-800">${d.name}</span>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="toggleVisibility('${d.id}', event)" class="p-1 hover:bg-stone-200 rounded-lg"><i data-lucide="${d.visible ? 'eye' : 'eye-off'}" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="toggleVisibility('${d.id}', event)" class="p-1 hover:bg-stone-200 rounded-lg"><i data-lucide="${child.visible ? 'eye' : 'eye-off'}" class="w-3.5 h-3.5"></i></button>
                         <button onclick="deleteEntity('${d.id}', event)" class="p-1 hover:bg-red-50 hover:text-red-600 rounded-lg"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
                     </div>`;
                 tree.appendChild(node);
@@ -447,49 +514,43 @@
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
-        function handleFileSelect(e) {
-            Array.from(e.target.files).forEach(file => {
-                const reader = new FileReader();
-                log(`INGESTING: ${file.name}...`, "upload");
-                reader.onload = (ev) => { if (file.name.toLowerCase().endsWith('.obj')) parseOBJ(ev.target.result, file.name); };
-                reader.readAsText(file);
-            });
-            e.target.value = ''; 
-        }
-
         function parseOBJ(data, filename) {
+            logActivity(`De-archiving OBJ: ${filename}`, "INGEST_OBJ");
             const loader = new THREE.OBJLoader();
             try {
                 const obj = loader.parse(data);
                 const bbox = new THREE.Box3().setFromObject(obj);
                 const center = new THREE.Vector3();
                 bbox.getCenter(center);
-                obj.position.sub(center); 
-                obj.position.y += 25; 
+                obj.position.sub(center); obj.position.y += 25; 
                 
                 const id = 'OBJ_'+Date.now();
                 obj.userData = { id, name: filename, type: 'Imported_Mesh', visible: true };
-                
                 obj.traverse(c => {
-                    if (c.isMesh) {
-                        c.material = new THREE.MeshStandardMaterial({ 
-                            color: 0x6b7280, 
-                            clippingPlanes: [globalSectionPlane, boreholePlane] 
-                        });
-                    }
+                    if (c.isMesh) c.material = new THREE.MeshStandardMaterial({ color: 0x6b7280, clippingPlanes: [globalSectionPlane, boreholePlane] });
                 });
                 bimModel.add(obj);
+                pushAction({ type: 'ADD', target: obj });
                 updateTree();
-                log(`SUCCESS: ${filename} ingested and aligned.`, "check-circle-2");
+                logActivity(`Ingest Success: ${filename} origin synchronized.`, "INGEST_SUCCESS");
             } catch (err) {
-                log("FAIL: Geometry reconstruction error.", "alert-triangle");
+                log("FAIL: OBJ geometry malformed.", "alert-triangle");
             }
+        }
+
+        function handleFileSelect(e) {
+            Array.from(e.target.files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (ev) => { if (file.name.toLowerCase().endsWith('.obj')) parseOBJ(ev.target.result, file.name); };
+                reader.readAsText(file);
+            });
+            e.target.value = ''; 
         }
 
         function runFEA() {
             if(isSolving || !bimModel.children.length) return;
             isSolving = true;
-            log("FEA: SOLVING ADAPTIVE MESH...", "zap");
+            logActivity("FEA SOLVER: Processing structural harmonic mesh...", "FEA_SOLVE");
             const scanBar = document.getElementById('main-scan-line');
             scanBar.classList.add('scan-active');
 
@@ -503,7 +564,7 @@
                 });
                 if(p >= 10) { 
                     clearInterval(t); isSolving = false; scanBar.classList.remove('scan-active');
-                    log(`SOLVE COMPLETE: Max Stress ${stress} MPa.`, "info"); 
+                    logActivity(`FEA Result: Max Stress ${stress} MPa localized.`, "SOLVE_RESULT"); 
                 }
             }, 80);
         }
@@ -514,12 +575,12 @@
             p.innerHTML = `
                 <div class="space-y-6 fade-in-up">
                     <div class="p-5 bg-stone-900 text-stone-100 rounded-[1.75rem] border-l-4" style="border-color: var(--ws-accent);">
-                        <span class="text-[9px] font-black uppercase text-stone-500 mb-2 block tracking-widest">GUID Registry</span>
+                        <span class="text-[9px] font-black uppercase text-stone-500 mb-2 block tracking-widest">System GUID</span>
                         <div class="font-mono text-[9px] break-all leading-tight">${ent.id}</div>
                     </div>
-                    <div class="grid gap-2">
+                    <div class="space-y-2">
                         <div class="p-4 bg-white border border-stone-200 rounded-2xl flex justify-between items-center shadow-sm">
-                            <span class="text-stone-400 uppercase text-[9px] font-black tracking-widest">Class</span>
+                            <span class="text-stone-400 uppercase text-[9px] font-black">Functional Class</span>
                             <span class="text-[10px] font-black">${ent.type}</span>
                         </div>
                     </div>
@@ -537,7 +598,47 @@
             });
         }
 
-        // --- Loader Logic ---
+        // --- Interaction Logic & Visibility ---
+
+        function toggleVisibility(id, e) {
+            e.stopPropagation();
+            const c = bimModel.children.find(x => x.userData.id === id);
+            if(c) {
+                pushAction({ type: 'VISIBILITY', target: c, oldState: c.visible });
+                c.visible = !c.visible;
+                c.userData.visible = c.visible;
+                updateTree();
+                logActivity(`Visibility Shift: ${c.userData.name}`, "STATE_TOGGLE");
+            }
+        }
+
+        function deleteEntity(id, e) {
+            e.stopPropagation();
+            const c = bimModel.children.find(x => x.userData.id === id);
+            if(c) {
+                pushAction({ type: 'DELETE', target: c });
+                bimModel.remove(c);
+                updateTree();
+                if(selectedEntityId === id) document.getElementById('property-panel').innerHTML = '';
+                logActivity(`Element Purged: ${c.userData.name}`, "ENTITY_DELETE");
+            }
+        }
+
+        function showAllEntities() {
+            bimModel.children.forEach(m => { m.visible = true; m.userData.visible = true; });
+            updateTree();
+            logActivity("Global visibility reset authorized.", "UI_CMD");
+        }
+
+        function clearEntities() {
+            bimModel.clear();
+            updateTree();
+            document.getElementById('property-panel').innerHTML = '';
+            logActivity("Total project domain reset executed.", "PURGE_ALL");
+        }
+
+        // --- System Utilities ---
+
         function initLoaderVisuals() {
             demoScene = new THREE.Scene(); demoScene.background = new THREE.Color(0xf1f0ee);
             demoCamera = new THREE.PerspectiveCamera(40, (window.innerWidth*0.58) / window.innerHeight, 0.1, 1000);
@@ -558,7 +659,8 @@
                 });
             }
             demoScene.add(demoBuilding);
-            demoScanner = new THREE.Mesh(new THREE.PlaneGeometry(35, 35), new THREE.MeshStandardMaterial({ color: 0x0891b2, transparent: true, opacity: 0.5, side: THREE.DoubleSide, emissive: 0x0891b2, emissiveIntensity: 2.5 }));
+            const scanMat = new THREE.MeshStandardMaterial({ color: 0x0891b2, transparent: true, opacity: 0.5, side: THREE.DoubleSide, emissive: 0x0891b2, emissiveIntensity: 2.5 });
+            demoScanner = new THREE.Mesh(new THREE.PlaneGeometry(35, 35), scanMat);
             demoScanner.rotation.x = Math.PI / 2; demoScene.add(demoScanner);
             demoScene.add(new THREE.AmbientLight(0xffffff, 0.6));
             animateDemo();
@@ -572,6 +674,7 @@
             if(scanY > 50 || scanY < 0) scanDir *= -1;
             demoScanner.position.y = scanY;
             document.getElementById('demo-height-val').innerText = `${scanY.toFixed(2)}m`;
+            document.getElementById('demo-freq-val').innerText = `${(Math.abs(Math.sin(scanY * 0.1)) * 1.5 + 0.8).toFixed(2)} Hz`;
             document.getElementById('demo-progress-fill').style.width = `${(scanY / 50) * 100}%`;
             demoBuilding.rotation.y += 0.0015; demoRenderer.render(demoScene, demoCamera);
         }
@@ -581,12 +684,12 @@
             setTimeout(() => {
                 document.getElementById('loader-overlay').style.display = 'none';
                 if(demoRenderer) demoRenderer.dispose(); demoRenderer = null;
-                const ui = document.getElementById('main-ui'); ui.classList.remove('pointer-events-none'); ui.style.opacity = '1';
-                log("Spatial Kernel Authorized. SURVEY DOMAIN ACTIVE.", "shield-check");
+                document.getElementById('main-ui').classList.remove('pointer-events-none');
+                document.getElementById('main-ui').style.opacity = '1';
+                logActivity("Spatial Intelligence Core Sync Successful.", "BOOT_END");
             }, 800);
         }
 
-        // --- HUD Utils ---
         function setCameraView(v) {
             if (!camera || !controls) return;
             if(v === 'iso') { camera.position.set(350, 300, 350); controls.target.set(0, 0, 0); }
@@ -596,20 +699,8 @@
         }
 
         function toggleGrid() { gridHelper.visible = !gridHelper.visible; document.getElementById('btn-grid').classList.toggle('active'); }
-        function toggleSection() { 
-            sectionActive = !sectionActive; document.getElementById('btn-section').classList.toggle('active'); 
-            globalSectionPlane.constant = sectionActive ? 0 : 10000; 
-            log(`GLOBAL_SECTION: ${sectionActive ? 'ENGAGED' : 'RETRACTED'}`, "slice");
-        }
-        function toggleXray() { 
-            xrayActive = !xrayActive; document.getElementById('btn-xray').classList.toggle('active'); 
-            bimModel.children.forEach(m => { m.traverse(node => { if(node.isMesh) { node.material.transparent = xrayActive; node.material.opacity = xrayActive ? 0.35 : 1.0; node.material.wireframe = xrayActive; } }); }); 
-        }
-
-        function showAllEntities() { bimModel.children.forEach(m => { m.visible = true; m.userData.visible = true; }); updateTree(); log("Visibility reset."); }
-        function clearEntities() { bimModel.clear(); updateTree(); document.getElementById('property-panel').innerHTML = ''; log("Project domain purged.", "trash-2"); }
-        function toggleVisibility(id, e) { e.stopPropagation(); const c = bimModel.children.find(x => x.userData.id === id); if(c) { c.visible = !c.visible; c.userData.visible = c.visible; updateTree(); } }
-        function deleteEntity(id, e) { e.stopPropagation(); const c = bimModel.children.find(x => x.userData.id === id); if(c) { bimModel.remove(c); updateTree(); log(`PURGED: ${c.userData.name}`, "trash-2"); } }
+        function toggleSection() { sectionActive = !sectionActive; document.getElementById('btn-section').classList.toggle('active'); globalSectionPlane.constant = sectionActive ? 0 : 10000; }
+        function toggleXray() { xrayActive = !xrayActive; document.getElementById('btn-xray').classList.toggle('active'); bimModel.children.forEach(m => { m.traverse(node => { if(node.isMesh) { node.material.transparent = xrayActive; node.material.opacity = xrayActive ? 0.35 : 1.0; node.material.wireframe = xrayActive; } }); }); }
 
         function log(m, icon = "info") {
             const l = document.getElementById('log'); if(!l) return;
@@ -619,6 +710,7 @@
         }
 
         function animate() { requestAnimationFrame(animate); if (controls) controls.update(); renderer.render(scene, camera); }
+        
         function setupHandlers() {
             window.addEventListener('resize', () => {
                 if(camera && renderer) { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); }
@@ -637,7 +729,6 @@
 
         window.onload = init;
         window.triggerImport = () => document.getElementById('file-input').click();
-        window.exportIFC = () => { log("SERIALIZING IFC STEP 2x3...", "share-2"); const blob = new Blob(["ISO-10303-21;HEADER;FILE_SCHEMA(('IFC2X3'));ENDSEC;DATA;ENDSEC;END-ISO-10303-21;"], {type:'text/plain'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `TS_BIM_PRO_${Date.now()}.ifc`; a.click(); log("IFC DATA DISPATCHED.", "check-circle-2"); };
     </script>
 </body>
 </html>
