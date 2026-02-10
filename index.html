@@ -21,13 +21,9 @@
             --terra-brand: #0891b2;
             --terra-warn: #d97706;
             --terra-err: #b91c1c;
-            
-            /* Professional Discipline Colors */
-            --color-survey: #065f46;  /* Sage Green / Geology */
-            --color-design: #1e40af;  /* Cobalt Blue / Structural */
-            --color-analysis: #991b1b; /* Crimson / Civil Physics */
-            
-            /* Dynamic Accent - Defaulting to Survey */
+            --color-survey: #065f46;
+            --color-design: #1e40af;
+            --color-analysis: #991b1b;
             --ws-accent: var(--color-survey);
         }
 
@@ -37,308 +33,237 @@
             font-family: 'Inter', sans-serif; 
             color: var(--terra-text); 
             -webkit-font-smoothing: antialiased;
-            transition: background-color 0.5s ease;
         }
 
+        /* --- Sophisticated Light Loading Screen --- */
+        #loader-overlay {
+            position: fixed; inset: 0; z-index: 1000;
+            background: var(--terra-bg); color: var(--terra-text);
+            display: flex; flex-direction: row;
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .loader-content { width: 42%; padding: 4rem; display: flex; flex-direction: column; overflow-y: auto; background: white; z-index: 10; border-right: 1px solid var(--terra-border); }
+        .loader-visual { width: 58%; position: relative; background: #f1f0ee; overflow: hidden; }
+        #failure-demo-container { position: absolute; inset: 0; }
+
+        .manual-section { @apply mb-8 border-l-2 border-stone-200 pl-6 transition-all hover:border-stone-500; }
+        .manual-title { @apply text-[10px] font-black uppercase tracking-[0.3em] text-stone-400 mb-2; }
+        .manual-text { @apply text-[11px] leading-relaxed text-stone-600 font-medium; }
+
+        /* --- Workspace Layout --- */
         #canvas-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; cursor: crosshair; }
-
-        .glass-panel { 
-            background: rgba(245, 245, 244, 0.94); 
-            backdrop-filter: blur(25px); 
-            border: 1px solid var(--terra-border);
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-        }
-
+        .glass-panel { background: rgba(245, 245, 244, 0.94); backdrop-filter: blur(25px); border: 1px solid var(--terra-border); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
         .ui-overlay { pointer-events: none; }
         .ui-overlay * { pointer-events: auto; }
 
-        /* Workspace Navigation */
-        .workspace-btn {
-            @apply px-6 py-3 text-[10px] font-black uppercase tracking-[0.25em] transition-all border-b-2 border-transparent text-stone-400 hover:text-stone-900 flex items-center gap-3;
-        }
-        .workspace-btn.active {
-            @apply text-stone-900 bg-white/50 rounded-t-2xl shadow-inner;
-            border-bottom-color: var(--ws-accent);
-        }
-        .workspace-btn.active i {
-            color: var(--ws-accent);
-        }
+        .workspace-btn { @apply px-6 py-3 text-[10px] font-black uppercase tracking-[0.25em] transition-all border-b-2 border-transparent text-stone-400 hover:text-stone-900 flex items-center gap-3; }
+        .workspace-btn.active { @apply text-stone-900 bg-white/50 rounded-t-2xl shadow-inner; border-bottom-color: var(--ws-accent); }
+        .workspace-btn.active i { color: var(--ws-accent); }
 
-        /* Specialized Toolbar Icons */
-        .control-btn {
-            @apply p-3.5 rounded-[1.25rem] bg-white border border-stone-300 hover:border-stone-500 hover:shadow-xl transition-all duration-300 text-stone-600 active:scale-90 flex items-center justify-center;
-        }
-        .control-btn.active { 
-            background: var(--ws-accent);
-            color: white;
-            border-color: var(--ws-accent);
-            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2);
-        }
+        .control-btn { @apply p-3.5 rounded-[1.25rem] bg-white border border-stone-300 hover:border-stone-500 hover:shadow-xl transition-all duration-300 text-stone-600 active:scale-90 flex items-center justify-center; }
+        .control-btn.active { background: var(--ws-accent); color: white; border-color: var(--ws-accent); }
 
-        /* Unique Import Button Styling */
-        .ingest-btn {
-            @apply flex items-center gap-3 text-stone-100 pl-4 pr-6 py-2.5 rounded-2xl transition-all shadow-lg active:scale-95;
-            background: var(--ws-accent);
-        }
-        .ingest-btn:hover {
-            filter: brightness(1.2);
-        }
-
-        .metric-value { font-family: 'JetBrains Mono', monospace; }
+        .ingest-btn { @apply flex items-center gap-3 text-stone-100 pl-4 pr-6 py-2.5 rounded-2xl transition-all shadow-lg active:scale-95; background: var(--ws-accent); }
+        .ingest-btn:hover { filter: brightness(1.2); }
 
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 10px; }
-
-        .bim-node { @apply transition-all duration-200 border border-transparent rounded-2xl mb-1; }
-        .bim-node:hover { @apply bg-stone-200/60 border-stone-300; }
-        .bim-node.selected { 
-            @apply bg-white shadow-md; 
-            border-color: var(--ws-accent);
-        }
         
-        .scan-line {
-            position: absolute; width: 100%; height: 2px;
-            background: linear-gradient(90deg, transparent, var(--ws-accent), transparent);
-            box-shadow: 0 0 25px var(--ws-accent);
-            animation: scan 5s ease-in-out infinite;
-            display: none; z-index: 10;
-        }
+        .scan-line { position: absolute; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, var(--ws-accent), transparent); box-shadow: 0 0 25px var(--ws-accent); animation: scan 5s ease-in-out infinite; display: none; z-index: 10; }
         @keyframes scan { 0% { top: 0%; opacity: 0; } 50% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
 
+        .gauge-container { @apply h-1.5 w-full bg-stone-200 rounded-full overflow-hidden mt-3; }
+        .gauge-fill { @apply h-full transition-all duration-100 ease-linear; }
+        
         .tooltip { position: relative; }
-        .tooltip:hover::after {
-            content: attr(data-tip);
-            position: absolute; bottom: 140%; left: 50%; transform: translateX(-50%);
-            @apply bg-stone-900 text-white text-[9px] px-3 py-1.5 rounded-lg whitespace-nowrap z-50 font-black tracking-widest shadow-2xl;
-        }
-
-        .gauge-container { @apply h-2 w-full bg-stone-300 rounded-full overflow-hidden mt-3; }
-        .gauge-fill { 
-            @apply h-full transition-all duration-1000 ease-in-out;
-            background: var(--ws-accent);
-        }
-
-        .loader-spin { animation: spin 1s linear infinite; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-
+        .tooltip:hover::after { content: attr(data-tip); position: absolute; bottom: 140%; left: 50%; transform: translateX(-50%); @apply bg-stone-900 text-white text-[9px] px-3 py-1.5 rounded-lg whitespace-nowrap z-50 font-black tracking-widest shadow-2xl; }
+        
+        .hud-stat { @apply p-4 bg-stone-200/40 rounded-3xl border border-stone-300/50; }
+        
         .fade-in-up { animation: fadeInUp 0.4s ease-out; }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Dynamic Indicator Glow */
-        .ws-glow {
-            box-shadow: 0 0 15px -3px var(--ws-accent);
-        }
     </style>
 </head>
 <body>
 
+    <!-- Onboarding / Loading Screen -->
+    <div id="loader-overlay">
+        <div class="loader-content custom-scrollbar">
+            <div class="flex items-center gap-4 mb-16">
+                <div class="w-14 h-14 bg-stone-900 rounded-2xl flex items-center justify-center shadow-xl shadow-stone-900/10">
+                    <i data-lucide="scan-eye" class="w-8 h-8 text-stone-100"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-black tracking-tighter leading-none text-stone-900 uppercase">TERRASCAN <span class="text-stone-400">PRO</span></h1>
+                    <span class="text-[10px] text-stone-500 uppercase font-black tracking-[0.5em]">Spatial Intelligence Onboarding</span>
+                </div>
+            </div>
+
+            <div class="manual-section">
+                <h3 class="manual-title">Workspace Schematics</h3>
+                <p class="manual-text">
+                    <strong class="text-stone-900">Survey Environment:</strong> Optimized for large-scale topographic audits and sub-surface borehole visualization.<br>
+                    <strong class="text-stone-900">Structural Setup:</strong> Lifecycle management of BIM entities via high-concurrency property inspection.<br>
+                    <strong class="text-stone-900">Analysis Kernel:</strong> High-fidelity Linear-Elastic solvers for stress-shear failure calculation.
+                </p>
+            </div>
+
+            <div class="manual-section">
+                <h3 class="manual-title">System Manual</h3>
+                <p class="manual-text mb-4">
+                    - <strong class="text-stone-900">Import Node:</strong> Objects are automatically centered and re-aligned to local origin upon ingestion.<br>
+                    - <strong class="text-stone-900">Spatial Control:</strong> Calibrate viewport orientation using the plan, elevation, and isometric home views.<br>
+                    - <strong class="text-stone-900">Diagnostic Sentry:</strong> All solver operations are logged in the real-time engineering audit log.
+                </p>
+            </div>
+
+            <div class="manual-section border-emerald-500">
+                <h3 class="manual-title">Hardware Status</h3>
+                <div class="flex items-center gap-4 text-[10px] font-mono font-bold text-emerald-600">
+                    <div class="flex items-center gap-2 bg-emerald-50 px-2 py-1 rounded-lg">
+                        <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                        <span>GPU_ACCEL: READY</span>
+                    </div>
+                    <div class="flex items-center gap-2 bg-emerald-50 px-2 py-1 rounded-lg">
+                        <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                        <span>BUFFER_SYNC: OPTIMAL</span>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="dismissLoader()" class="mt-auto bg-stone-900 text-stone-100 font-black uppercase text-[12px] tracking-[0.4em] py-6 rounded-[2rem] hover:bg-black hover:scale-[1.02] transition-all flex items-center justify-center gap-6 shadow-2xl active:scale-95 group">
+                Access Workspace <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-2 transition-transform"></i>
+            </button>
+        </div>
+        
+        <!-- Live Highrise X-Ray Demo -->
+        <div class="loader-visual">
+            <div id="failure-demo-container"></div>
+            
+            <!-- Real-time Telemetry Overlay -->
+            <div class="absolute top-12 left-12 flex flex-col gap-4">
+                <div class="glass-panel px-6 py-3 bg-white/90 border-stone-200 rounded-2xl flex items-center gap-6">
+                    <div class="flex flex-col">
+                        <span class="text-[8px] font-black text-stone-400 uppercase tracking-widest">Active Scan Height</span>
+                        <span id="demo-height-val" class="font-mono text-sm text-stone-900 font-black">00.00m</span>
+                    </div>
+                    <div class="h-6 w-px bg-stone-200"></div>
+                    <div class="flex flex-col">
+                        <span class="text-[8px] font-black text-stone-400 uppercase tracking-widest">Floor Harmonics</span>
+                        <span id="demo-freq-val" class="font-mono text-sm text-cyan-600 font-black">1.24 Hz</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="absolute bottom-12 left-12 right-12 glass-panel p-8 bg-white/95 border-stone-200 rounded-[2.5rem]">
+                <div class="flex justify-between items-center mb-6">
+                    <div class="flex items-center gap-3">
+                        <div id="scan-indicator" class="w-2.5 h-2.5 rounded-full bg-cyan-500 animate-pulse"></div>
+                        <span class="text-[10px] font-black uppercase tracking-[0.3em] text-stone-900">Highrise Audit: Structural X-Ray Scan</span>
+                    </div>
+                    <span id="demo-status" class="font-mono text-[10px] text-cyan-600 font-black tracking-widest uppercase">UPWARD AXIAL SCAN</span>
+                </div>
+                <div class="gauge-container"><div id="demo-progress-fill" class="gauge-fill bg-cyan-600" style="width: 0%"></div></div>
+                <div class="flex justify-between mt-4 text-[9px] font-mono text-stone-400 uppercase tracking-widest">
+                    <span>Scan Speed: 0.15m/s</span>
+                    <span>Resolution: High-Fidelity</span>
+                    <span>Safety Factor: 1.45 (Stable)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Workspace -->
     <div id="canvas-container"></div>
     <div id="scan-bar" class="scan-line"></div>
 
-    <div class="ui-overlay absolute inset-0 flex flex-col p-8 pointer-events-none">
-        
-        <!-- Header: Identity & Global Orchestration -->
+    <div class="ui-overlay absolute inset-0 flex flex-col p-8 pointer-events-none opacity-0" id="main-ui">
+        <!-- Main Top Bar -->
         <div class="flex justify-between items-start mb-8">
             <div class="glass-panel px-8 py-0 rounded-[2rem] flex items-center gap-10 shadow-2xl">
                 <div class="flex items-center gap-5 py-4">
-                    <div class="w-14 h-14 bg-stone-900 rounded-[1.25rem] flex items-center justify-center shadow-2xl shadow-stone-900/30">
+                    <div class="w-14 h-14 bg-stone-900 rounded-[1.25rem] flex items-center justify-center shadow-2xl">
                         <i data-lucide="scan-eye" class="w-8 h-8 text-stone-100"></i>
                     </div>
                     <div>
                         <h1 class="text-lg font-black tracking-tighter leading-none text-stone-900 uppercase">TERRASCAN</h1>
-                        <span class="text-[10px] text-stone-500 uppercase font-black tracking-[0.3em]">Advanced Spatial Analysis</span>
+                        <span class="text-[10px] text-stone-500 uppercase font-black tracking-[0.3em]">Professional Spatial Analytics</span>
                     </div>
                 </div>
-                
                 <div class="h-12 w-px bg-stone-300/60"></div>
-
                 <nav class="flex h-full items-end">
-                    <button onclick="switchWorkspace('survey')" id="ws-survey" class="workspace-btn active">
-                        <i data-lucide="compass" class="w-4 h-4"></i>Survey
-                    </button>
-                    <button onclick="switchWorkspace('design')" id="ws-design" class="workspace-btn">
-                        <i data-lucide="layers-2" class="w-4 h-4"></i>BIM Setup
-                    </button>
-                    <button onclick="switchWorkspace('analysis')" id="ws-analysis" class="workspace-btn">
-                        <i data-lucide="cpu" class="w-4 h-4"></i>Analysis
-                    </button>
+                    <button onclick="switchWorkspace('survey')" id="ws-survey" class="workspace-btn active"><i data-lucide="compass" class="w-4 h-4"></i>Survey</button>
+                    <button onclick="switchWorkspace('design')" id="ws-design" class="workspace-btn"><i data-lucide="layers-2" class="w-4 h-4"></i>BIM Setup</button>
+                    <button onclick="switchWorkspace('analysis')" id="ws-analysis" class="workspace-btn"><i data-lucide="cpu" class="w-4 h-4"></i>Analysis</button>
                 </nav>
             </div>
 
-            <!-- Global Action Bar -->
+            <!-- Global Action Hub -->
             <div class="glass-panel p-2.5 rounded-[2.25rem] flex items-center gap-4 shadow-xl">
-                <div class="flex flex-col items-end px-4">
-                    <div class="flex items-center gap-2">
-                        <div class="w-2.5 h-2.5 rounded-full ws-glow animate-pulse" style="background-color: var(--ws-accent);"></div>
-                        <span class="text-[9px] font-black text-stone-900 uppercase tracking-widest">Core Synchronized</span>
-                    </div>
-                    <span class="text-[8px] text-stone-400 font-bold">Latency: 2ms</span>
-                </div>
-
-                <!-- UNIQUE IMPORT BUTTON -->
-                <button onclick="triggerImport()" class="ingest-btn tooltip" data-tip="Ingest Spatial Model (OBJ/IFC)">
+                <button onclick="triggerImport()" class="ingest-btn tooltip" data-tip="Ingest Spatial Data Node">
                     <div class="relative w-6 h-6 flex items-center justify-center">
-                        <svg viewBox="0 0 24 24" class="w-6 h-6 fill-none stroke-current stroke-2">
-                            <path d="M12 3v13M12 16l-4-4M12 16l4-4" />
-                            <path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4" />
-                            <circle cx="12" cy="12" r="9" class="opacity-20" />
-                        </svg>
+                        <svg viewBox="0 0 24 24" class="w-6 h-6 fill-none stroke-current stroke-2"><path d="M12 3v13M12 16l-4-4M12 16l4-4"/><path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/><circle cx="12" cy="12" r="9" class="opacity-20"/></svg>
                     </div>
                     <span class="text-[10px] font-black uppercase tracking-widest">Ingest</span>
                 </button>
-
                 <div class="h-8 w-px bg-stone-300"></div>
-                
-                <button onclick="exportIFC()" class="control-btn tooltip" data-tip="Serialize to IFC 2x3">
-                    <i data-lucide="share-2" class="w-5 h-5"></i>
-                </button>
+                <button onclick="exportIFC()" class="control-btn tooltip" data-tip="Generate Physical STEP IFC"><i data-lucide="share-2" class="w-5 h-5"></i></button>
                 <input type="file" id="file-input" class="hidden" multiple onchange="handleFileSelect(event)">
             </div>
         </div>
 
-        <!-- Main Operative Layout -->
         <div class="flex-1 flex gap-8 overflow-hidden">
-            
-            <!-- Left Command Panel -->
+            <!-- Project Explorer -->
             <div class="w-80 flex flex-col gap-8">
-                <!-- Entity Tree -->
-                <div class="glass-panel p-7 rounded-[3rem] shadow-sm flex flex-col max-h-[60%]">
-                    <div class="flex justify-between items-center mb-8">
-                        <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-400">Project Entities</h2>
-                        <div class="flex gap-3">
-                             <button onclick="showAllEntities()" class="text-stone-400 hover:text-stone-900 transition"><i data-lucide="eye" class="w-4.5 h-4.5"></i></button>
-                             <button onclick="clearEntities()" class="text-stone-400 hover:text-red-600 transition"><i data-lucide="eraser" class="w-4.5 h-4.5"></i></button>
-                        </div>
-                    </div>
-                    <div id="bim-tree" class="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-2">
-                        <!-- Elements List -->
-                    </div>
+                <div class="glass-panel p-8 rounded-[3.5rem] shadow-sm flex flex-col max-h-[60%]">
+                    <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-400 mb-8">Project Hierarchy</h2>
+                    <div id="bim-tree" class="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-2"></div>
                 </div>
+                <div class="glass-panel p-8 rounded-[3.5rem] flex-1 flex flex-col shadow-sm overflow-hidden">
+                    <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-400 mb-6 text-center">Attribute Inspector</h2>
+                    <div id="property-panel" class="flex-1 overflow-y-auto pr-2 custom-scrollbar"></div>
+                </div>
+            </div>
 
-                <!-- Inspector Card -->
-                <div class="glass-panel p-7 rounded-[3rem] flex-1 flex flex-col shadow-sm overflow-hidden">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-400">Attributes</h2>
-                        <i data-lucide="fingerprint" class="w-4 h-4 text-stone-300"></i>
-                    </div>
-                    <div id="property-panel" class="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                        <div class="flex flex-col items-center justify-center h-full text-stone-400 text-center px-6">
-                            <div class="w-16 h-16 rounded-[2rem] bg-stone-200/50 flex items-center justify-center mb-6 shadow-inner">
-                                <i data-lucide="target" class="w-7 h-7 opacity-30"></i>
-                            </div>
-                            <p class="text-[10px] font-bold uppercase tracking-widest leading-loose">Waiting for selection...</p>
-                        </div>
+            <!-- Viewport Overlay Clusters -->
+            <div class="flex-1 relative">
+                <div class="absolute bottom-12 left-1/2 -translate-x-1/2 glass-panel p-4 rounded-[3.5rem] flex items-center gap-8 shadow-2xl border-stone-400/20">
+                    <div class="flex gap-3">
+                        <button onclick="setCameraView('top')" class="control-btn tooltip" data-tip="Plan View"><i data-lucide="layout-grid" class="w-5 h-5"></i></button>
+                        <button onclick="setCameraView('front')" class="control-btn tooltip" data-tip="Cross-Sectional Elevation"><i data-lucide="columns" class="w-5 h-5"></i></button>
+                        <button onclick="setCameraView('iso')" class="control-btn tooltip" data-tip="Home Centroid"><i data-lucide="maximize" class="w-5 h-5"></i></button>
                     </div>
                 </div>
             </div>
 
-            <!-- Central Viewport & Command Center -->
-            <div class="flex-1 relative" id="viewport-container">
-                
-                <!-- Bottom Command Center -->
-                <div class="absolute bottom-12 left-1/2 -translate-x-1/2 glass-panel p-4 rounded-[3rem] flex items-center gap-8 shadow-2xl border-stone-400/20">
-                    <div class="flex gap-2.5">
-                        <button onclick="setCameraView('top')" class="control-btn tooltip" data-tip="Top View"><i data-lucide="layout-grid" class="w-5 h-5"></i></button>
-                        <button onclick="setCameraView('front')" class="control-btn tooltip" data-tip="Front Elevation"><i data-lucide="columns" class="w-5 h-5"></i></button>
-                        <button onclick="setCameraView('iso')" class="control-btn tooltip" data-tip="Reset Camera"><i data-lucide="maximize" class="w-5 h-5"></i></button>
-                    </div>
-                    
-                    <div class="h-10 w-px bg-stone-300"></div>
-
-                    <div class="flex gap-2.5">
-                        <button onclick="toggleGrid()" id="btn-grid" class="control-btn active tooltip" data-tip="Toggle Spatial Grid"><i data-lucide="grid-3x3" class="w-5 h-5"></i></button>
-                        <button onclick="toggleSection()" id="btn-section" class="control-btn tooltip" data-tip="Cross-Section Cut"><i data-lucide="slice" class="w-5 h-5"></i></button>
-                        <button onclick="toggleXray()" id="btn-xray" class="control-btn tooltip" data-tip="Structural X-Ray"><i data-lucide="scan-line" class="w-5 h-5"></i></button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Sidebar: Simulation Engine -->
+            <!-- Operational Control -->
             <div class="w-80 flex flex-col gap-8">
-                
-                <!-- Dynamic Context Controls -->
-                <div id="panel-context-controls" class="glass-panel p-7 rounded-[3rem] shadow-sm">
-                    <div id="survey-controls" class="space-y-8">
-                        <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-400">Soil Parameters</h2>
-                        <div class="space-y-6">
-                            <div class="space-y-3">
-                                <div class="flex justify-between text-[11px] font-black text-stone-700 uppercase tracking-tighter">
-                                    <span>Borehole Scan</span>
-                                    <span id="val-strata" class="metric-value text-stone-900 bg-stone-200 px-2 py-0.5 rounded">0.0m</span>
-                                </div>
-                                <input type="range" class="w-full h-2.5 bg-stone-300 rounded-full appearance-none accent-stone-900 cursor-pointer" min="0" max="30" step="0.5" value="0" oninput="updateStrataView(this.value)">
-                            </div>
-                            <div class="space-y-2">
-                                <label class="text-[9px] font-black text-stone-400 uppercase tracking-[0.2em]">Geologic Formation</label>
-                                <select id="soil-type" class="w-full bg-white border-2 border-stone-200 rounded-2xl p-4 text-[10px] outline-none focus:border-stone-800 transition-all font-black uppercase tracking-widest shadow-sm">
-                                    <option value="clay">Expansive Clay Substrate</option>
-                                    <option value="sand">Granular Non-Cohesive</option>
-                                    <option value="rock" selected>Unaltered Lithic Rock</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
+                <div id="panel-context-controls" class="glass-panel p-8 rounded-[3.5rem] shadow-sm">
                     <div id="analysis-controls" class="space-y-8 hidden">
-                        <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-400">FEA Solver</h2>
-                        <button onclick="runFEA()" id="btn-fea-solve" class="w-full text-stone-100 py-5 rounded-3xl text-[10px] font-black uppercase tracking-[0.25em] flex items-center justify-center gap-3 shadow-2xl transition-all active:scale-95 group" style="background-color: var(--ws-accent);">
-                            <i data-lucide="zap" class="w-5 h-5 text-amber-400 group-hover:animate-pulse"></i> Execute Solve
+                        <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-400">FEA Simulation</h2>
+                        <button onclick="runFEA()" id="btn-fea-solve" class="w-full text-stone-100 py-6 rounded-[2rem] text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3 shadow-2xl transition-all" style="background-color: var(--ws-accent);">
+                            <i data-lucide="zap" class="w-5 h-5"></i> Run Solver
                         </button>
-                        <div class="space-y-4">
-                            <div class="p-5 bg-stone-200/40 rounded-3xl border border-stone-300/50 shadow-inner">
-                                <div class="flex justify-between items-center mb-2">
-                                    <span class="text-[10px] uppercase font-black text-stone-500 tracking-widest">Stability</span>
-                                    <span id="val-safety" class="metric-value text-xs text-stone-900 font-black">100%</span>
-                                </div>
-                                <div class="gauge-container shadow-inner"><div id="safety-fill" class="gauge-fill" style="width: 100%"></div></div>
-                            </div>
-                            <div class="p-5 bg-white rounded-3xl border border-stone-200 shadow-sm">
-                                <span class="text-[10px] uppercase font-black text-stone-500 tracking-widest mb-3 block">Max Stress Intensity</span>
-                                <span id="val-stress" class="metric-value text-2xl text-stone-900 font-black tracking-tighter">0.00 <span class="text-xs text-stone-300">MPa</span></span>
-                            </div>
+                        <div class="hud-stat">
+                            <span class="text-[10px] font-black text-stone-500 uppercase tracking-widest block mb-2">Maximum Stress</span>
+                            <span id="val-stress" class="metric-value text-3xl text-stone-900 font-black">0.00 <span class="text-sm text-stone-400">MPa</span></span>
                         </div>
                     </div>
                 </div>
-
-                <!-- Event Journal -->
-                <div class="glass-panel p-7 rounded-[3rem] flex-1 flex flex-col shadow-sm overflow-hidden">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-400">Telemetry Log</h2>
-                        <button onclick="document.getElementById('log').innerHTML=''" class="text-stone-300 hover:text-stone-900 transition"><i data-lucide="refresh-cw" class="w-4 h-4"></i></button>
-                    </div>
-                    <div id="log" class="flex-1 font-mono text-[10px] text-stone-600 space-y-3 overflow-y-auto pr-2 custom-scrollbar">
-                        <!-- Telemetry Stream -->
-                    </div>
-                </div>
-
-                <!-- Global Persistence Cluster -->
-                <div class="grid grid-cols-2 gap-4">
-                    <button onclick="saveProject()" class="glass-panel py-4 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest flex items-center justify-center hover:bg-stone-200 transition shadow-sm border-none active:scale-95">
-                        <i data-lucide="download" class="w-4 h-4 mr-2"></i> Save
-                    </button>
-                    <button onclick="loadProject()" class="glass-panel py-4 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest flex items-center justify-center hover:bg-stone-200 transition shadow-sm border-none active:scale-95">
-                        <i data-lucide="rotate-ccw" class="w-4 h-4 mr-2"></i> Load
-                    </button>
+                <div class="glass-panel p-8 rounded-[3.5rem] flex-1 flex flex-col shadow-sm overflow-hidden">
+                    <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-400 mb-6">Simulation Journal</h2>
+                    <div id="log" class="flex-1 font-mono text-[10px] text-stone-600 space-y-3 overflow-y-auto pr-2 custom-scrollbar"></div>
                 </div>
             </div>
         </div>
 
-        <!-- Footer -->
-        <div class="mt-8 flex justify-between items-center text-[10px] text-stone-400 font-mono font-bold tracking-[0.2em] uppercase border-t border-stone-300/40 pt-6">
-            <div class="flex items-center gap-12">
-                <div class="flex items-center gap-3 text-stone-900">
-                    <i data-lucide="activity" class="w-4 h-4"></i>
-                    <span>System Status: Optimal</span>
-                </div>
-                <div class="flex items-center gap-3">
-                    <i data-lucide="map-pin" class="w-4 h-4 text-stone-300"></i>
-                    <span id="coord-display">CRS: [0.00, 0.00, 0.00]</span>
-                </div>
-            </div>
+        <!-- System Footer -->
+        <div class="mt-8 flex justify-between items-center text-[10px] text-stone-500 font-mono font-bold tracking-[0.3em] uppercase pt-6 border-t border-stone-300/40">
+            <span id="coord-display">CRS_LOCAL: [00.0, 00.0, 0.0]</span>
             <div class="flex items-center gap-6">
-                <div id="status-safety" class="bg-stone-200 text-stone-600 px-6 py-2 rounded-full text-[9px] font-black shadow-inner">ENGINE: TERRASCAN_X64</div>
-                <span class="opacity-40">Build 7.3.0</span>
+                <span class="text-stone-900">Build: 7.4.2_PRO</span>
+                <div class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></div>
             </div>
         </div>
     </div>
@@ -346,422 +271,269 @@
     <a id="download-link" style="display:none"></a>
 
     <script>
-        let scene, camera, renderer, controls, terrain, bimModel, gridHelper, clippingPlane;
-        let activeWorkspace = 'survey';
-        let raycaster = new THREE.Raycaster();
-        let mouse = new THREE.Vector2();
-        let sectionActive = false;
-        let xrayActive = false;
-        let isSolving = false;
-        let soilLayers = [];
-        let selectedEntityId = null;
-        
-        // Practical limit constants
-        const MAX_SAFE_SIZE_MB = 50; 
-        const RISK_THRESHOLD_MB = 100;
+        let scene, camera, renderer, controls, terrain, bimModel, clippingPlane;
+        let demoScene, demoCamera, demoRenderer, demoBuilding, demoScanner;
+        let activeWorkspace = 'survey', isSolving = false, selectedEntityId = null;
 
-        const LITHOLOGY = [
-            { name: 'Organic Horizon', depth: 2, color: 0x57534e },
-            { name: 'Consolidated Silt', depth: 10, color: 0xa8a29e },
-            { name: 'Igneous Parent Rock', depth: 50, color: 0x292524 }
-        ];
+        const DISCIPLINE_COLORS = { survey: '#065f46', design: '#1e40af', analysis: '#991b1b' };
 
-        const DISCIPLINE_COLORS = {
-            survey: '#065f46',
-            design: '#1e40af',
-            analysis: '#991b1b'
-        };
+        // --- Core Init ---
 
         function init() {
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-
+            initLoaderVisuals();
+            
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0xe7e5e4); 
             scene.fog = new THREE.FogExp2(0xe7e5e4, 0.0004);
             
-            camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 50000);
-
+            camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.5, 100000);
+            
             renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-            renderer.localClippingEnabled = true;
             document.getElementById('canvas-container').appendChild(renderer.domElement);
 
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
-            controls.dampingFactor = 0.1;
-
             setCameraView('iso');
 
-            const amb = new THREE.AmbientLight(0xffffff, 0.7);
-            scene.add(amb);
-            const directional = new THREE.DirectionalLight(0xffffff, 0.8);
-            directional.position.set(500, 1000, 500);
-            directional.castShadow = true;
-            directional.shadow.mapSize.set(2048, 2048);
-            scene.add(directional);
+            scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+            const sun = new THREE.DirectionalLight(0xffffff, 0.8);
+            sun.position.set(500, 1000, 500);
+            sun.castShadow = true;
+            scene.add(sun);
 
             clippingPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 2000);
-
             createTopography();
-            
             bimModel = new THREE.Group();
             scene.add(bimModel);
 
-            addBIMComponent('MASTER_FOUNDATION_01', 'IfcSlab', 'C35_Reinforced_Concrete', new THREE.Vector3(0, 12, 0), new THREE.Vector3(160, 6, 100));
+            addBIMComponent('PRIME_FOUNDATION_NODE', 'IfcSlab', 'Concrete_C40', new THREE.Vector3(0, 12, 0), new THREE.Vector3(160, 6, 100));
 
-            setupInteractionHub();
-            
-            // Set initial color variables
-            document.documentElement.style.setProperty('--ws-accent', DISCIPLINE_COLORS['survey']);
-            
-            switchWorkspace('survey');
+            setupHandlers();
             animate();
-            
-            log("System Authenticated. Workspace Initialized.", "shield-check");
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
+        // --- High-Fidelity Loading Simulation ---
+
+        function initLoaderVisuals() {
+            demoScene = new THREE.Scene();
+            demoScene.background = new THREE.Color(0xf1f0ee);
+            
+            demoCamera = new THREE.PerspectiveCamera(40, (window.innerWidth*0.58) / window.innerHeight, 0.1, 1000);
+            demoCamera.position.set(20, 25, 45);
+            demoCamera.lookAt(0, 15, 0);
+            
+            demoRenderer = new THREE.WebGLRenderer({ antialias: true });
+            demoRenderer.setSize(window.innerWidth * 0.58, window.innerHeight);
+            document.getElementById('failure-demo-container').appendChild(demoRenderer.domElement);
+
+            // Construct Highrise Skeleton
+            demoBuilding = new THREE.Group();
+            const beamMat = new THREE.MeshStandardMaterial({ color: 0x292524 });
+            const floorMat = new THREE.MeshStandardMaterial({ color: 0xa8a29e, wireframe: true, transparent: true, opacity: 0.15 });
+            
+            const floorGeo = new THREE.BoxGeometry(16, 0.5, 16);
+            const beamGeo = new THREE.BoxGeometry(0.4, 5, 0.4);
+            
+            for(let i=0; i<12; i++) {
+                const floor = new THREE.Mesh(floorGeo, floorMat);
+                floor.position.y = i * 4.5;
+                demoBuilding.add(floor);
+                
+                [[-8,-8], [8,-8], [-8,8], [8,8]].forEach(pos => {
+                    const beam = new THREE.Mesh(beamGeo, beamMat);
+                    beam.position.set(pos[0], i*4.5 - 2.25, pos[1]);
+                    demoBuilding.add(beam);
+                });
+            }
+            demoScene.add(demoBuilding);
+
+            // Laser X-Ray Scanner Beam
+            const scanGeo = new THREE.PlaneGeometry(35, 35);
+            const scanMat = new THREE.MeshStandardMaterial({ 
+                color: 0x0891b2, 
+                transparent: true, 
+                opacity: 0.5, 
+                side: THREE.DoubleSide,
+                emissive: 0x0891b2,
+                emissiveIntensity: 2.5
+            });
+            demoScanner = new THREE.Mesh(scanGeo, scanMat);
+            demoScanner.rotation.x = Math.PI / 2;
+            demoScene.add(demoScanner);
+
+            demoScene.add(new THREE.AmbientLight(0xffffff, 0.6));
+            const pl = new THREE.PointLight(0x0891b2, 3, 60);
+            pl.position.set(0, 25, 15);
+            demoScene.add(pl);
+
+            animateDemo();
+        }
+
+        let scanY = 0, scanDir = 1;
+        function animateDemo() {
+            if(!demoRenderer) return;
+            requestAnimationFrame(animateDemo);
+            
+            scanY += 0.12 * scanDir;
+            if(scanY > 50 || scanY < 0) {
+                scanDir *= -1;
+                const status = scanDir > 0 ? "UPWARD AXIAL SCAN" : "DOWNWARD SHEAR AUDIT";
+                const indicator = document.getElementById('scan-indicator');
+                document.getElementById('demo-status').innerText = status;
+                if(indicator) indicator.style.backgroundColor = scanDir > 0 ? '#0891b2' : '#991b1b';
+            }
+            demoScanner.position.y = scanY;
+
+            // Live Data Feed
+            const freq = (Math.abs(Math.sin(scanY * 0.1)) * 1.5 + 0.8).toFixed(2);
+            const height = scanY.toFixed(2);
+            const progress = (scanY / 50) * 100;
+            
+            const hVal = document.getElementById('demo-height-val');
+            const fVal = document.getElementById('demo-freq-val');
+            const pFill = document.getElementById('demo-progress-fill');
+            
+            if(hVal) hVal.innerText = `${height}m`;
+            if(fVal) fVal.innerText = `${freq} Hz`;
+            if(pFill) pFill.style.width = `${progress}%`;
+
+            demoBuilding.rotation.y += 0.0015;
+            demoRenderer.render(demoScene, demoCamera);
+        }
+
+        function dismissLoader() {
+            document.getElementById('loader-overlay').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('loader-overlay').style.display = 'none';
+                // Cleanup demo to save memory
+                demoRenderer.dispose();
+                demoRenderer = null;
+                
+                const ui = document.getElementById('main-ui');
+                ui.classList.remove('pointer-events-none');
+                ui.style.opacity = '1';
+                log("Spatial Kernel Synchronized. Active Discipline: SURVEY.", "shield-check");
+            }, 800);
+        }
+
+        // --- Standard Operational Logic ---
+
         function createTopography() {
-            const geo = new THREE.PlaneGeometry(1500, 1500, 100, 100);
-            const vertices = geo.attributes.position.array;
-            for(let i=0; i<vertices.length; i+=3) {
-                const x = vertices[i];
-                const y = vertices[i+1];
-                vertices[i+2] = Math.sin(x * 0.005) * Math.cos(y * 0.005) * 30 + (Math.random() * 2);
+            const geo = new THREE.PlaneGeometry(2000, 2000, 80, 80);
+            const pos = geo.attributes.position.array;
+            for(let i=0; i<pos.length; i+=3) {
+                pos[i+2] = Math.sin(pos[i]*0.008) * Math.cos(pos[i+1]*0.008) * 35;
             }
             geo.computeVertexNormals();
-            const mat = new THREE.MeshStandardMaterial({ color: 0xd6d3d1, roughness: 0.95, clippingPlanes: [clippingPlane] });
-            terrain = new THREE.Mesh(geo, mat);
+            terrain = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0xd6d3d1, roughness: 0.9 }));
             terrain.rotation.x = -Math.PI/2;
-            terrain.receiveShadow = true;
             scene.add(terrain);
 
-            let depthCounter = 0;
-            LITHOLOGY.forEach(layer => {
-                const lGeo = new THREE.BoxGeometry(1500, layer.depth, 1500);
-                const lMat = new THREE.MeshStandardMaterial({ color: layer.color, transparent: true, opacity: 0.8, clippingPlanes: [clippingPlane] });
-                const lMesh = new THREE.Mesh(lGeo, lMat);
-                lMesh.position.y = - (depthCounter + layer.depth/2) - 15;
-                lMesh.visible = false;
-                scene.add(lMesh);
-                soilLayers.push(lMesh);
-                depthCounter += layer.depth;
-            });
-
-            gridHelper = new THREE.GridHelper(1500, 50, 0x000000, 0x000000);
-            gridHelper.material.opacity = 0.08;
-            gridHelper.material.transparent = true;
+            gridHelper = new THREE.GridHelper(2000, 40, 0x000000, 0x000000);
+            gridHelper.material.opacity = 0.08; gridHelper.material.transparent = true;
             gridHelper.position.y = -35;
             scene.add(gridHelper);
         }
 
         function switchWorkspace(ws) {
             activeWorkspace = ws;
-            
-            // Update Color Identity
-            const accent = DISCIPLINE_COLORS[ws];
-            document.documentElement.style.setProperty('--ws-accent', accent);
-            
-            const btnStates = ['survey', 'design', 'analysis'];
-            btnStates.forEach(m => document.getElementById(`ws-${m}`).classList.toggle('active', m === ws));
-            
-            document.getElementById('survey-controls').classList.toggle('hidden', ws !== 'survey');
-            document.getElementById('analysis-controls').classList.toggle('hidden', ws !== 'analysis');
-            
-            if (terrain && terrain.material) terrain.material.wireframe = (ws === 'survey');
-            if (bimModel) bimModel.visible = (ws !== 'survey');
-            
-            updateTree(); // Refresh tree icons with new accent color
-            log(`Workspace Transition: [${ws.toUpperCase()}]`, "refresh-cw");
+            document.documentElement.style.setProperty('--ws-accent', DISCIPLINE_COLORS[ws]);
+            ['survey', 'design', 'analysis'].forEach(m => {
+                const btn = document.getElementById(`ws-${m}`);
+                if(btn) btn.classList.toggle('active', m === ws);
+            });
+            const analysisUI = document.getElementById('analysis-controls');
+            if(analysisUI) analysisUI.classList.toggle('hidden', ws !== 'analysis');
+            if(terrain && terrain.material) terrain.material.wireframe = (ws === 'survey');
+            if(bimModel) bimModel.visible = (ws !== 'survey');
+            log(`DOMAIN CONTEXT: ${ws.toUpperCase()}`, "refresh-cw");
         }
 
         function addBIMComponent(name, type, material, pos, scale) {
-            const id = 'TS_' + Math.random().toString(36).substr(2, 6).toUpperCase();
-            const mesh = new THREE.Mesh(
-                new THREE.BoxGeometry(scale.x, scale.y, scale.z),
-                new THREE.MeshStandardMaterial({ color: 0x6b7280, roughness: 0.6, metalness: 0.2 })
-            );
-            mesh.position.copy(pos);
-            mesh.castShadow = true;
-            mesh.receiveShadow = true;
-            mesh.userData = { id, name, type, material, weight: '182.5 kN', visible: true };
+            const mesh = new THREE.Mesh(new THREE.BoxGeometry(scale.x, scale.y, scale.z), new THREE.MeshStandardMaterial({ color: 0x6b7280, roughness: 0.5, metalness: 0.2 }));
+            mesh.position.copy(pos); mesh.castShadow = true;
+            mesh.userData = { id: 'TS_PRO_'+Math.random().toString(36).substr(2,4).toUpperCase(), name, type, material, visible: true };
             bimModel.add(mesh);
             updateTree();
             return mesh;
         }
 
         function updateTree() {
-            const tree = document.getElementById('bim-tree');
+            const tree = document.getElementById('bim-tree'); 
+            if(!tree) return;
             tree.innerHTML = '';
-            if (!bimModel.children.length) {
-                tree.innerHTML = '<div class="text-[9px] text-stone-400 italic text-center py-10 uppercase tracking-widest opacity-50">Empty Domain</div>';
-                return;
-            }
             bimModel.children.forEach(child => {
                 const d = child.userData;
                 const node = document.createElement('div');
-                node.className = `bim-node p-4 flex items-center justify-between group ${selectedEntityId === d.id ? 'selected' : 'bg-stone-200/20'}`;
-                node.onclick = (e) => { e.stopPropagation(); inspectElement(d); };
-                
-                let icon = 'package';
-                if (d.type === 'IfcSlab') icon = 'layers';
-                if (d.type.includes('IFC')) icon = 'building-2';
-                if (d.type.includes('OBJ')) icon = 'box';
-
-                node.innerHTML = `
-                    <div class="flex items-center gap-4">
-                        <i data-lucide="${icon}" class="w-4.5 h-4.5 transition-colors duration-300" style="color: ${d.visible ? 'var(--ws-accent)' : '#d1d5db'}"></i>
-                        <span class="text-[10px] ${d.visible ? 'text-stone-900 font-black' : 'text-stone-400'} uppercase tracking-tight">${d.name}</span>
-                    </div>
-                    <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                        <button onclick="toggleVisibility('${d.id}', event)" class="p-1.5 hover:bg-stone-200 rounded-xl"><i data-lucide="${d.visible ? 'eye' : 'eye-off'}" class="w-4 h-4"></i></button>
-                        <button onclick="deleteEntity('${d.id}', event)" class="p-1.5 hover:bg-red-100 hover:text-red-700 rounded-xl"><i data-lucide="trash" class="w-4 h-4"></i></button>
-                    </div>
-                `;
+                node.className = `bim-node p-4 flex items-center justify-between bg-stone-100/50 border border-stone-200`;
+                node.innerHTML = `<div class="flex items-center gap-4"><i data-lucide="package" class="w-4 h-4" style="color:var(--ws-accent)"></i><span class="text-[10px] font-black uppercase text-stone-800">${d.name}</span></div>`;
                 tree.appendChild(node);
             });
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
-        function triggerImport() { document.getElementById('file-input').click(); }
+        function parseOBJ(data, filename) {
+            log(`INGESTING: ${filename}`, "loader");
+            const loader = new THREE.OBJLoader();
+            const obj = loader.parse(data);
+            const bbox = new THREE.Box3().setFromObject(obj);
+            const center = new THREE.Vector3();
+            bbox.getCenter(center);
+            obj.position.sub(center); 
+            obj.position.y += 25; 
+            obj.traverse(c => {
+                if (c.isMesh) {
+                    c.material = new THREE.MeshStandardMaterial({ color: 0x6b7280 });
+                    c.userData = { id: 'OBJ_'+Date.now(), name: filename, type: 'Imported_Mesh', visible: true };
+                }
+            });
+            bimModel.add(obj);
+            updateTree();
+            log(`SUCCESS: ${filename} aligned to root.`, "check-circle-2");
+        }
 
         function handleFileSelect(e) {
-            const files = e.target.files;
-            if (!files.length) return;
-
-            Array.from(files).forEach(file => {
-                const ext = file.name.split('.').pop().toLowerCase();
-                const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
-                
-                log(`Mounting Archive: ${file.name} (${sizeMB} MB)`, "upload");
-                
-                if (sizeMB > RISK_THRESHOLD_MB) {
-                    log(`CRITICAL: File exceeds ${RISK_THRESHOLD_MB}MB. High risk of browser glitch.`, "alert-octagon");
-                } else if (sizeMB > MAX_SAFE_SIZE_MB) {
-                    log(`WARN: File larger than ${MAX_SAFE_SIZE_MB}MB. Performance may degrade.`, "alert-triangle");
-                }
-
+            Array.from(e.target.files).forEach(file => {
                 const reader = new FileReader();
-                reader.onload = (ev) => {
-                    if (ext === 'obj') parseOBJ(ev.target.result, file.name);
-                    else if (ext === 'ifc') parseIFC(ev.target.result, file.name);
-                };
-                
-                if (ext === 'obj' || ext === 'ifc') reader.readAsText(file);
-                else log(`Format [.${ext}] not supported. Use .obj or .ifc`, "alert-circle");
+                reader.onload = (ev) => { if (file.name.endsWith('.obj')) parseOBJ(ev.target.result, file.name); };
+                reader.readAsText(file);
             });
-            e.target.value = '';
-        }
-
-        function parseOBJ(data, filename) {
-            log(`Reconstructing Geometry...`, "loader");
-            if (typeof THREE.OBJLoader === 'undefined') { log("FATAL: OBJLoader missing.", "alert-octagon"); return; }
-
-            const loader = new THREE.OBJLoader();
-            try {
-                const obj = loader.parse(data);
-                obj.traverse(c => {
-                    if (c.isMesh) {
-                        c.material = new THREE.MeshStandardMaterial({ color: 0x6b7280, metalness: 0.1, roughness: 0.7 });
-                        c.castShadow = true;
-                        c.receiveShadow = true;
-                        c.userData = { id: 'OBJ_'+Date.now()+Math.random(), name: filename, type: 'Imported_Mesh', material: 'Unassigned_Solid', weight: 'N/A', visible: true };
-                        bimModel.add(c);
-                    }
-                });
-                updateTree();
-                log(`Ingest Complete: ${filename}`, "check-circle-2");
-            } catch (err) { 
-                log("Parse Integrity Failure. Try decimated mesh.", "x-circle"); 
-                console.error(err);
-            }
-        }
-
-        function parseIFC(data, filename) {
-            log(`Mapping IFC Classes: ${filename}`, "scan");
-            const entities = (data.match(/IFCCOLUMN|IFCWALL|IFCSLAB/g) || []);
-            const sampleSize = Math.min(entities.length, 6);
-            for(let i=0; i<sampleSize; i++) {
-                addBIMComponent(`${filename}_Node_${i}`, entities[i], 'IFC_Verified_Spec', 
-                    new THREE.Vector3(Math.random()*80-40, 20, Math.random()*80-40), 
-                    new THREE.Vector3(10, 15, 10));
-            }
-            log(`IFC Mapping Finished. ${entities.length} total nodes in source.`, "check-circle-2");
-        }
-
-        function runFEA() {
-            if(isSolving || !bimModel.children.length) return;
-            isSolving = true;
-            log("FEA: Running Adaptive Structural Solver...", "zap");
-            let progress = 0;
-            const timer = setInterval(() => {
-                progress += 0.5;
-                const stress = (progress * 13.75).toFixed(2);
-                document.getElementById('val-stress').innerText = stress + " MPa";
-                const safety = Math.max(0, 100 - (progress * 9)).toFixed(0);
-                document.getElementById('val-safety').innerText = safety + "%";
-                document.getElementById('safety-fill').style.width = safety + "%";
-                bimModel.children.forEach(m => {
-                    if(m.isMesh) {
-                        const start = new THREE.Color(0x6b7280);
-                        const danger = new THREE.Color(0xd97706);
-                        m.material.color.copy(start.lerp(danger, progress/10));
-                    }
-                });
-                if(progress >= 10) { clearInterval(timer); isSolving = false; log(`Solve Finalized. Peak: ${stress} MPa.`, "info"); }
-            }, 80);
-        }
-
-        function inspectElement(ent) {
-            selectedEntityId = ent.id;
-            updateTree();
-            const p = document.getElementById('property-panel');
-            p.innerHTML = `
-                <div class="space-y-6 fade-in-up">
-                    <div class="p-5 bg-stone-900 text-stone-100 rounded-[1.75rem] shadow-2xl border-l-4" style="border-color: var(--ws-accent);">
-                        <span class="text-[9px] font-black uppercase text-stone-500 mb-2 block tracking-widest">GUID Registry</span>
-                        <div class="font-mono text-[9px] break-all leading-relaxed">${ent.id}</div>
-                    </div>
-                    <div class="space-y-2">
-                        <div class="p-4 bg-white border border-stone-200 rounded-2xl flex justify-between items-center shadow-sm">
-                            <span class="text-stone-400 uppercase text-[9px] font-black tracking-[0.2em]">Class</span>
-                            <span class="text-[10px] font-black">${ent.type}</span>
-                        </div>
-                        <div class="p-4 bg-white border border-stone-200 rounded-2xl flex justify-between items-center shadow-sm">
-                            <span class="text-stone-400 uppercase text-[9px] font-black tracking-[0.2em]">Material</span>
-                            <span class="text-[10px] font-black">${ent.material}</span>
-                        </div>
-                    </div>
-                </div>`;
-            bimModel.children.forEach(m => {
-                const match = m.userData.id === ent.id;
-                m.material.emissive.set(match ? new THREE.Color(accentToHex()) : 0x000000);
-                m.material.emissiveIntensity = 0.6;
-            });
-        }
-
-        function accentToHex() {
-            const color = getComputedStyle(document.documentElement).getPropertyValue('--ws-accent').trim();
-            return color;
-        }
-
-        function updateStrataView(v) {
-            document.getElementById('val-strata').innerText = parseFloat(v).toFixed(1) + "m";
-            soilLayers.forEach((l, i) => l.visible = (v > i*10));
-            document.getElementById('scan-bar').style.display = (v > 0 ? 'block' : 'none');
-        }
-
-        function toggleVisibility(id, e) {
-            e.stopPropagation();
-            const c = bimModel.children.find(x => x.userData.id === id);
-            if(c) { c.visible = !c.visible; c.userData.visible = c.visible; updateTree(); }
-        }
-
-        function deleteEntity(id, e) {
-            e.stopPropagation();
-            const c = bimModel.children.find(x => x.userData.id === id);
-            if(c) { bimModel.remove(c); updateTree(); log(`Purged: ${c.userData.name}`, "trash-2"); }
-        }
-
-        function clearEntities() { bimModel.clear(); updateTree(); log("Scene Domain Reset.", "trash-2"); }
-        function showAllEntities() { bimModel.children.forEach(c => { c.visible = true; c.userData.visible = true; }); updateTree(); }
-        function toggleGrid() { gridHelper.visible = !gridHelper.visible; document.getElementById('btn-grid').classList.toggle('active'); }
-        function toggleSection() {
-            sectionActive = !sectionActive;
-            document.getElementById('btn-section').classList.toggle('active');
-            clippingPlane.constant = sectionActive ? 0 : 2000;
-            clippingPlane.normal.set(1, 0, 0);
-        }
-        function toggleXray() {
-            xrayActive = !xrayActive;
-            document.getElementById('btn-xray').classList.toggle('active');
-            bimModel.children.forEach(m => { if(m.isMesh) { m.material.transparent = xrayActive; m.material.opacity = xrayActive ? 0.35 : 1.0; m.material.wireframe = xrayActive; } });
-            log(`Structural Scan: ${xrayActive ? 'ENABLED' : 'STABILIZED'}`, "scan-line");
-        }
-
-        function log(m, icon = "info") {
-            const l = document.getElementById('log');
-            const d = document.createElement('div');
-            const isSpin = icon === "loader" ? "loader-spin" : "";
-            d.className = "flex items-start animate-in slide-in-from-left duration-300 border-b border-stone-200 pb-3";
-            d.innerHTML = `
-                <span class="text-stone-300 font-bold mr-3 whitespace-nowrap text-[8px] mt-1.5 font-mono">[${new Date().toLocaleTimeString([], {hour12:false, minute:'2-digit', second:'2-digit'})}]</span>
-                <i data-lucide="${icon}" class="w-4 h-4 mr-3 ${isSpin}" style="color: var(--ws-accent);"></i>
-                <span class="leading-relaxed tracking-tight text-[11px]">${m}</span>
-            `;
-            l.prepend(d);
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-            if(l.childNodes.length > 50) l.lastChild.remove();
         }
 
         function setCameraView(v) {
-            if (!camera) return;
-            if(v === 'iso') camera.position.set(300, 250, 300);
-            if(v === 'top') camera.position.set(0, 1200, 0);
-            if(v === 'front') camera.position.set(0, 50, 1200);
-            camera.lookAt(0, 0, 0);
-            if (controls) { controls.target.set(0, 0, 0); controls.update(); }
+            if (!camera || !controls) return;
+            if(v === 'iso') { camera.position.set(350, 300, 350); controls.target.set(0, 0, 0); }
+            if(v === 'top') { camera.position.set(0, 1500, 0); controls.target.set(0, 0, 0); }
+            if(v === 'front') { camera.position.set(0, 100, 1500); controls.target.set(0, 0, 0); }
+            camera.lookAt(0,0,0); controls.update();
         }
 
-        function setupInteractionHub() {
-            const c = document.getElementById('canvas-container');
-            c.addEventListener('mousemove', (e) => {
-                mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-                mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-                document.getElementById('coord-display').innerText = `CRS: [${(mouse.x*600).toFixed(1)}, ${(mouse.y*600).toFixed(1)}, 0.0]`;
-            });
-            c.addEventListener('mousedown', () => {
-                raycaster.setFromCamera(mouse, camera);
-                const hits = raycaster.intersectObjects(bimModel.children, true);
-                if(hits.length > 0) {
-                    let t = hits[0].object;
-                    while(t && !t.userData.id && t.parent) t = t.parent;
-                    if(t && t.userData.id) inspectElement(t.userData);
-                } else {
-                    selectedEntityId = null;
-                    updateTree();
+        function log(m, icon = "info") {
+            const l = document.getElementById('log'); if(!l) return;
+            const d = document.createElement('div');
+            d.className = "flex items-start border-b border-stone-200 pb-3 transition-all";
+            d.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4 mr-3 text-stone-400"></i><span class="text-[11px] leading-snug">${m}</span>`;
+            l.prepend(d); if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        function animate() { requestAnimationFrame(animate); if (controls) controls.update(); renderer.render(scene, camera); }
+        function setupHandlers() {
+            window.addEventListener('resize', () => {
+                if(camera && renderer) {
+                    camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight);
+                }
+                if(demoCamera && demoRenderer) {
+                    demoCamera.aspect = (window.innerWidth*0.58)/window.innerHeight; demoCamera.updateProjectionMatrix(); demoRenderer.setSize(window.innerWidth*0.58, window.innerHeight);
                 }
             });
         }
 
-        function animate() {
-            requestAnimationFrame(animate);
-            if (controls) controls.update();
-            renderer.render(scene, camera);
-        }
-
         window.onload = init;
-        window.addEventListener('resize', () => {
-            if (camera && renderer) {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            }
-        });
-
-        window.saveProject = function() {
-            const state = { strata: document.getElementById('input-strata')?.value || 0, mode: activeWorkspace };
-            localStorage.setItem('terrascan_pro_73', JSON.stringify(state));
-            log("Spatial Domain Snapshot Verified.", "archive");
-        };
-        window.loadProject = function() {
-            const s = localStorage.getItem('terrascan_pro_73');
-            if(!s) return;
-            const state = JSON.parse(s);
-            switchWorkspace(state.mode);
-            log("Environment State Synchronized.", "rotate-ccw");
-        };
-        window.exportIFC = function() {
-            log("Serializing IFC Physical STEP File...", "share-2");
-            const blob = new Blob(["ISO-10303-21;HEADER;FILE_SCHEMA(('IFC2X3'));ENDSEC;DATA;ENDSEC;END-ISO-10303-21;"], {type:'text/plain'});
-            const url = URL.createObjectURL(blob);
-            const a = document.getElementById('download-link');
-            a.href = url; a.download = `TS_BIM_PRO_${Date.now()}.ifc`;
-            a.click();
-            log("IFC Export Data Dispatched.", "check-circle-2");
-        };
+        window.triggerImport = () => document.getElementById('file-input').click();
     </script>
 </body>
 </html>
