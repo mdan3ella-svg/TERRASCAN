@@ -21,9 +21,10 @@
             --terra-brand: #0891b2;
             --terra-warn: #d97706;
             --terra-err: #b91c1c;
-            --color-survey: #065f46;  /* Sage Green / Geology */
-            --color-design: #1e40af;  /* Cobalt Blue / Structural */
-            --color-analysis: #991b1b; /* Crimson / Civil Physics */
+            /* Discipline Color Standards */
+            --color-survey: #065f46;   /* Sage/Emerald - Geology/Geotech */
+            --color-design: #1e40af;   /* Cobalt/Blueprint - Structural BIM */
+            --color-analysis: #991b1b;  /* Crimson/Ruby - Civil Physics/FEA */
             --ws-accent: var(--color-survey);
         }
 
@@ -35,27 +36,22 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        /* --- Sophisticated Light Loading Screen --- */
-        #loader-overlay {
-            position: fixed; inset: 0; z-index: 1000;
-            background: var(--terra-bg); color: var(--terra-text);
-            display: flex; flex-direction: row;
-            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        /* --- UI Polish & Adaptive Theming --- */
+        .glass-panel { 
+            background: rgba(245, 245, 244, 0.94); 
+            backdrop-filter: blur(25px); 
+            border: 2px solid var(--terra-border);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            transition: border-color 0.4s ease, box-shadow 0.4s ease;
+        }
+        
+        .panel-active-outline {
+            border-color: var(--ws-accent) !important;
+            box-shadow: 0 0 20px -5px var(--ws-accent);
         }
 
-        .loader-content { width: 42%; padding: 4rem; display: flex; flex-direction: column; overflow-y: auto; background: white; z-index: 10; border-right: 1px solid var(--terra-border); }
-        .loader-visual { width: 58%; position: relative; background: #f1f0ee; overflow: hidden; }
-        #failure-demo-container { position: absolute; inset: 0; }
-
-        .manual-section { @apply mb-8 border-l-2 border-stone-200 pl-6 transition-all hover:border-stone-500; }
-        .manual-title { @apply text-[10px] font-black uppercase tracking-[0.3em] text-stone-400 mb-2; }
-        .manual-text { @apply text-[11px] leading-relaxed text-stone-600 font-medium; }
-
-        /* --- Workspace Layout --- */
-        #canvas-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; cursor: crosshair; }
-        .glass-panel { background: rgba(245, 245, 244, 0.94); backdrop-filter: blur(25px); border: 1px solid var(--terra-border); box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1); }
-        .ui-overlay { pointer-events: none; }
-        .ui-overlay * { pointer-events: auto; }
+        .text-accent { color: var(--ws-accent); transition: color 0.4s ease; }
+        .bg-accent { background-color: var(--ws-accent); transition: background-color 0.4s ease; }
 
         .workspace-btn { @apply px-6 py-3 text-[10px] font-black uppercase tracking-[0.25em] transition-all border-b-2 border-transparent text-stone-400 hover:text-stone-900 flex items-center gap-3; }
         .workspace-btn.active { @apply text-stone-900 bg-white/50 rounded-t-2xl shadow-inner; border-bottom-color: var(--ws-accent); }
@@ -65,44 +61,32 @@
         .control-btn.active { background: var(--ws-accent) !important; color: white !important; border-color: var(--ws-accent); }
 
         .ingest-btn { @apply flex items-center gap-3 text-stone-100 pl-4 pr-6 py-2.5 rounded-2xl transition-all shadow-lg active:scale-95; background: var(--ws-accent); }
-        .ingest-btn:hover { filter: brightness(1.2); }
-
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 10px; }
         
-        /* Fixed Scan Line Animation */
-        .scan-line { 
-            position: absolute; 
-            width: 100%; 
-            height: 2px; 
-            left: 0;
-            background: linear-gradient(90deg, transparent, var(--ws-accent), transparent); 
-            box-shadow: 0 0 30px var(--ws-accent), 0 0 60px var(--ws-accent); 
-            opacity: 0;
-            z-index: 50; 
-            pointer-events: none;
-            transition: opacity 0.3s ease;
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--terra-border); border-radius: 10px; }
+        
+        .bim-node { @apply transition-all duration-200 border-l-4 border-transparent rounded-r-2xl mb-1 cursor-pointer bg-stone-100/50 p-4 flex items-center justify-between; }
+        .bim-node:hover { @apply bg-stone-200/60; }
+        .bim-node.selected { @apply bg-white shadow-md border-l-4; border-left-color: var(--ws-accent); }
+
+        .database-item { @apply p-3 border-b border-stone-200 hover:bg-stone-50 transition-colors cursor-help; }
+
+        /* --- Loading Screen --- */
+        #loader-overlay {
+            position: fixed; inset: 0; z-index: 1000;
+            background: var(--terra-bg); color: var(--terra-text);
+            display: flex; flex-direction: row;
+            transition: opacity 0.8s ease;
         }
-        .scan-active {
-            animation: scan-move 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-            opacity: 0.8;
-        }
+        .loader-content { width: 42%; padding: 4rem; display: flex; flex-direction: column; overflow-y: auto; background: white; border-right: 1px solid var(--terra-border); }
+        .loader-visual { width: 58%; position: relative; background: #f1f0ee; }
+        
+        .scan-line { position: absolute; width: 100%; height: 2px; left: 0; background: linear-gradient(90deg, transparent, var(--ws-accent), transparent); box-shadow: 0 0 30px var(--ws-accent); opacity: 0; z-index: 50; pointer-events: none; }
+        .scan-active { animation: scan-move 4s cubic-bezier(0.4, 0, 0.2, 1) infinite; opacity: 0.8; }
         @keyframes scan-move { 0% { top: 0%; } 50% { top: 100%; } 100% { top: 0%; } }
 
-        .gauge-container { @apply h-1.5 w-full bg-stone-200 rounded-full overflow-hidden mt-3; }
-        .gauge-fill { @apply h-full transition-all duration-100 ease-linear; background: var(--ws-accent); }
-        
-        .tooltip { position: relative; }
-        .tooltip:hover::after { content: attr(data-tip); position: absolute; bottom: 140%; left: 50%; transform: translateX(-50%); @apply bg-stone-900 text-white text-[9px] px-3 py-1.5 rounded-lg whitespace-nowrap z-50 font-black tracking-widest shadow-2xl; }
-        
-        .hud-stat { @apply p-4 bg-stone-200/40 rounded-3xl border border-stone-300/50; }
-        
         .fade-in-up { animation: fadeInUp 0.4s ease-out; }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .bim-node { @apply transition-all duration-200 border border-transparent rounded-2xl mb-1 cursor-pointer; }
-        .bim-node:hover { @apply bg-stone-200/60 border-stone-300; }
-        .bim-node.selected { @apply bg-white shadow-md; border-color: var(--ws-accent); }
     </style>
 </head>
 <body>
@@ -111,48 +95,41 @@
     <div id="loader-overlay">
         <div class="loader-content custom-scrollbar">
             <div class="flex items-center gap-4 mb-16">
-                <div class="w-14 h-14 bg-stone-900 rounded-2xl flex items-center justify-center shadow-xl shadow-stone-900/10">
+                <div class="w-14 h-14 bg-stone-900 rounded-2xl flex items-center justify-center shadow-xl">
                     <i data-lucide="scan-eye" class="w-8 h-8 text-stone-100"></i>
                 </div>
                 <div>
                     <h1 class="text-2xl font-black tracking-tighter leading-none text-stone-900 uppercase">TERRASCAN <span class="text-stone-400">PRO</span></h1>
-                    <span class="text-[10px] text-stone-500 uppercase font-black tracking-[0.5em]">Spatial Intelligence Onboarding</span>
+                    <span class="text-[10px] text-stone-500 uppercase font-black tracking-[0.5em]">Specialized Interface Initializing</span>
                 </div>
             </div>
 
-            <div class="manual-section">
-                <h3 class="manual-title">The Auto Scan Line</h3>
-                <p class="manual-text">
-                    This visual pulse indicates active <strong class="text-stone-900">LiDAR data acquisition</strong>. It triggers during FEA solver cycles and Borehole sectioning to confirm GPU processing of sub-surface anomalies.
-                </p>
+            <div class="space-y-12">
+                <section class="border-l-2 border-stone-200 pl-6">
+                    <h3 class="text-[10px] font-black uppercase tracking-[0.3em] text-stone-400 mb-2">Discipline Architecture</h3>
+                    <p class="text-[11px] leading-relaxed text-stone-600">
+                        <span class="font-bold text-[#065f46]">GEOLOGY (SAGE):</span> Volumetric borehole scans and lithology mapping.<br>
+                        <span class="font-bold text-[#1e40af]">STRUCTURAL (COBALT):</span> BIM entity setup and metadata alignment.<br>
+                        <span class="font-bold text-[#991b1b]">CIVIL PHYSICS (RUBY):</span> Finite Element Analysis and failure simulation.
+                    </p>
+                </section>
+                
+                <section class="border-l-2 border-stone-200 pl-6">
+                    <h3 class="text-[10px] font-black uppercase tracking-[0.3em] text-stone-400 mb-2">Database Access</h3>
+                    <p class="text-[11px] leading-relaxed text-stone-600">
+                        Integrated ASTM, AISC, and ACI standards are accessible via the side panel for real-time reference against simulation results.
+                    </p>
+                </section>
             </div>
 
-            <div class="manual-section">
-                <h3 class="manual-title">Project Work Management</h3>
-                <p class="manual-text">
-                    The system automatically tracks all spatial modifications. Integrated <strong class="text-stone-900">Undo</strong> capabilities and an auto-generated <strong class="text-stone-900">Audit Ledger</strong> ensure full compliance for structural exports.
-                </p>
-            </div>
-
-            <div class="manual-section border-emerald-500">
-                <h3 class="manual-title">Hardware Status</h3>
-                <div class="flex items-center gap-4 text-[10px] font-mono font-bold text-emerald-600">
-                    <div class="flex items-center gap-2 bg-emerald-50 px-2 py-1 rounded-lg">
-                        <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                        <span>GPU_ACCEL: READY</span>
-                    </div>
-                </div>
-            </div>
-
-            <button onclick="dismissLoader()" class="mt-auto bg-stone-900 text-stone-100 font-black uppercase text-[12px] tracking-[0.4em] py-6 rounded-[2rem] hover:bg-black hover:scale-[1.02] transition-all flex items-center justify-center gap-6 shadow-2xl active:scale-95 group">
-                Access Workspace <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-2 transition-transform"></i>
+            <button onclick="dismissLoader()" class="mt-auto bg-stone-900 text-stone-100 font-black uppercase text-[12px] tracking-[0.4em] py-6 rounded-[2rem] hover:bg-black transition-all flex items-center justify-center gap-6 shadow-2xl active:scale-95 group">
+                Launch Workspace <i data-lucide="arrow-right" class="w-5 h-5 group-hover:translate-x-2 transition-transform"></i>
             </button>
         </div>
         
-        <!-- Live Highrise X-Ray Demo -->
         <div class="loader-visual">
-            <div id="failure-demo-container"></div>
-            
+            <div id="failure-demo-container" class="absolute inset-0"></div>
+
             <!-- Real-time Telemetry Overlay -->
             <div class="absolute top-12 left-12 flex flex-col gap-4">
                 <div class="glass-panel px-6 py-3 bg-white/90 border-stone-200 rounded-2xl flex items-center gap-6">
@@ -172,11 +149,13 @@
                 <div class="flex justify-between items-center mb-6">
                     <div class="flex items-center gap-3">
                         <div id="scan-indicator" class="w-2.5 h-2.5 rounded-full bg-cyan-500 animate-pulse"></div>
-                        <span class="text-[10px] font-black uppercase tracking-[0.3em] text-stone-900">System Diagnostic: Structural Audit</span>
+                        <span class="text-[10px] font-black uppercase tracking-[0.3em] text-stone-900">Highrise Audit: X-Ray Scan</span>
                     </div>
-                    <span id="demo-status" class="font-mono text-[10px] text-cyan-600 font-black tracking-widest uppercase">UPWARD AXIAL SCAN</span>
+                    <span id="demo-status" class="font-mono text-[10px] text-cyan-600 font-black uppercase tracking-widest">UPWARD SCAN...</span>
                 </div>
-                <div class="gauge-container"><div id="demo-progress-fill" class="gauge-fill bg-cyan-600" style="width: 0%"></div></div>
+                <div class="w-full h-1.5 bg-stone-200 rounded-full overflow-hidden">
+                    <div id="demo-progress-fill" class="h-full bg-cyan-600 transition-all duration-100"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -195,115 +174,122 @@
                     </div>
                     <div>
                         <h1 class="text-lg font-black tracking-tighter leading-none text-stone-900 uppercase">TERRASCAN</h1>
-                        <span class="text-[10px] text-stone-500 uppercase font-black tracking-[0.3em]">Professional Spatial Analytics</span>
+                        <span class="text-[10px] text-stone-500 uppercase font-black tracking-[0.3em]">Precision Engineering Suite</span>
                     </div>
                 </div>
                 <div class="h-12 w-px bg-stone-300/60"></div>
                 <nav class="flex h-full items-end">
-                    <button onclick="switchWorkspace('survey')" id="ws-survey" class="workspace-btn active" title="Geological & Topographic Survey"><i data-lucide="compass" class="w-4 h-4"></i>Survey</button>
-                    <button onclick="switchWorkspace('design')" id="ws-design" class="workspace-btn" title="Structural BIM Configuration"><i data-lucide="layers-2" class="w-4 h-4"></i>BIM Setup</button>
-                    <button onclick="switchWorkspace('analysis')" id="ws-analysis" class="workspace-btn" title="Civil FEA & Stress Analysis"><i data-lucide="cpu" class="w-4 h-4"></i>Analysis</button>
+                    <button onclick="switchWorkspace('survey')" id="ws-survey" class="workspace-btn active"><i data-lucide="compass" class="w-4 h-4"></i>Survey</button>
+                    <button onclick="switchWorkspace('design')" id="ws-design" class="workspace-btn"><i data-lucide="layers-2" class="w-4 h-4"></i>BIM Setup</button>
+                    <button onclick="switchWorkspace('analysis')" id="ws-analysis" class="workspace-btn"><i data-lucide="cpu" class="w-4 h-4"></i>Analysis</button>
                 </nav>
             </div>
 
             <div class="glass-panel p-2.5 rounded-[2.25rem] flex items-center gap-4 shadow-xl">
                 <div class="flex flex-col items-end px-4">
                     <div class="flex items-center gap-2">
-                        <div class="w-2 h-2 rounded-full animate-pulse" style="background-color: var(--ws-accent);"></div>
-                        <span class="text-[8px] font-black text-stone-900 uppercase tracking-widest">Workspace Active</span>
+                        <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse bg-accent"></div>
+                        <span class="text-[8px] font-black text-stone-900 uppercase tracking-widest">Active Shell</span>
                     </div>
-                    <span id="active-discipline-label" class="text-[7px] text-stone-400 font-bold uppercase tracking-widest">Geology</span>
+                    <span id="active-discipline-label" class="text-[7px] font-bold uppercase tracking-widest text-accent">Geology</span>
                 </div>
-                <button onclick="triggerImport()" class="ingest-btn tooltip" data-tip="Ingest Spatial Data (OBJ/IFC)">
-                    <div class="relative w-6 h-6 flex items-center justify-center">
-                        <svg viewBox="0 0 24 24" class="w-6 h-6 fill-none stroke-current stroke-2"><path d="M12 3v13M12 16l-4-4M12 16l4-4"/><path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4"/><circle cx="12" cy="12" r="9" class="opacity-20"/></svg>
-                    </div>
-                    <span class="text-[10px] font-black uppercase tracking-widest">Ingest</span>
+                <button onclick="triggerImport()" class="ingest-btn" title="Ingest Spatial Model">
+                    <i data-lucide="file-up" class="w-5 h-5"></i>
+                    <span class="text-[10px] font-black uppercase">Ingest</span>
                 </button>
                 <div class="h-8 w-px bg-stone-300"></div>
-                <button onclick="exportProjectAudit()" class="bg-stone-900 text-stone-100 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition flex items-center gap-2 shadow-lg tooltip" data-tip="Export Project Report & Data">
+                <button onclick="exportProjectAudit()" class="bg-stone-900 text-stone-100 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition flex items-center gap-2 shadow-lg tooltip" data-tip="Export Project Audit">
                     <i data-lucide="file-text" class="w-4 h-4"></i> Export
                 </button>
-                <input type="file" id="file-input" class="hidden" multiple onchange="handleFileSelect(event)">
+                <input type="file" id="file-input" class="hidden" onchange="handleFileSelect(event)">
             </div>
         </div>
 
+        <!-- Operative Core -->
         <div class="flex-1 flex gap-8 overflow-hidden">
-            <!-- Left Side -->
+            <!-- Left Panel: Entities & Hierarchy -->
             <div class="w-80 flex flex-col gap-8">
-                <div id="panel-entities" class="glass-panel p-8 rounded-[3.5rem] shadow-sm flex flex-col max-h-[60%] border-t-4" style="border-top-color: var(--ws-accent);">
+                <div id="panel-entities" class="glass-panel p-8 rounded-[3.5rem] shadow-sm flex flex-col max-h-[60%] panel-active-outline">
                     <div class="flex justify-between items-center mb-8">
-                        <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-400">Entities</h2>
+                        <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-400">Project Entities</h2>
                         <div class="flex gap-2">
                              <button onclick="undoAction()" class="text-stone-400 hover:text-stone-900 transition tooltip" data-tip="Undo Last Action"><i data-lucide="rotate-ccw" class="w-4 h-4"></i></button>
-                             <button onclick="showAllEntities()" class="text-stone-400 hover:text-stone-900 transition tooltip" data-tip="Restore Visibility"><i data-lucide="eye" class="w-4 h-4"></i></button>
-                             <button onclick="clearEntities()" class="text-stone-400 hover:text-red-600 transition tooltip" data-tip="Purge Scene"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                             <button onclick="clearEntities()" class="text-stone-400 hover:text-red-600 transition tooltip" data-tip="Purge Domain"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                         </div>
                     </div>
                     <div id="bim-tree" class="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-2"></div>
                 </div>
-                <div id="panel-inspector" class="glass-panel p-8 rounded-[3.5rem] flex-1 flex flex-col shadow-sm overflow-hidden border-t-4" style="border-top-color: var(--ws-accent);">
-                    <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-400 mb-6 text-center">Inspector</h2>
+
+                <div id="panel-inspector" class="glass-panel p-8 rounded-[3.5rem] flex-1 flex flex-col shadow-sm overflow-hidden panel-active-outline">
+                    <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-400 mb-6 text-center">Attributes</h2>
                     <div id="property-panel" class="flex-1 overflow-y-auto pr-2 custom-scrollbar"></div>
                 </div>
             </div>
 
-            <!-- Command Center HUD -->
+            <!-- Main HUD (Bottom Center) -->
             <div class="flex-1 relative">
-                <div class="absolute bottom-12 left-1/2 -translate-x-1/2 glass-panel p-4 rounded-[3.5rem] flex items-center gap-8 shadow-2xl border-stone-400/20">
+                <div class="absolute bottom-12 left-1/2 -translate-x-1/2 glass-panel p-4 rounded-[3.5rem] flex items-center gap-8 shadow-2xl border-stone-400/20 panel-active-outline">
                     <div class="flex gap-3">
-                        <button onclick="setCameraView('top')" class="control-btn tooltip" data-tip="Plan View (Top)"><i data-lucide="layout-grid" class="w-5 h-5"></i></button>
-                        <button onclick="setCameraView('front')" class="control-btn tooltip" data-tip="Structural Elevation"><i data-lucide="columns" class="w-5 h-5"></i></button>
-                        <button onclick="setCameraView('iso')" class="control-btn tooltip" data-tip="Isometric Origin"><i data-lucide="maximize" class="w-5 h-5"></i></button>
+                        <button onclick="setCameraView('top')" class="control-btn tooltip" data-tip="Plan View"><i data-lucide="layout-grid" class="w-5 h-5"></i></button>
+                        <button onclick="setCameraView('front')" class="control-btn tooltip" data-tip="Elevation"><i data-lucide="columns" class="w-5 h-5"></i></button>
+                        <button onclick="setCameraView('iso')" class="control-btn tooltip" data-tip="Home Centroid"><i data-lucide="maximize" class="w-5 h-5"></i></button>
                     </div>
                     <div class="h-10 w-px bg-stone-300"></div>
                     <div class="flex gap-3">
-                        <button onclick="toggleGrid()" id="btn-grid" class="control-btn active tooltip" data-tip="Spatial Reference Grid"><i data-lucide="grid-3x3" class="w-5 h-5"></i></button>
-                        <button onclick="toggleSection()" id="btn-section" class="control-btn tooltip" data-tip="Global Section Plane"><i data-lucide="slice" class="w-5 h-5"></i></button>
-                        <button onclick="toggleXray()" id="btn-xray" class="control-btn tooltip" data-tip="X-Ray Scan Mode"><i data-lucide="scan-line" class="w-5 h-5"></i></button>
+                        <button onclick="toggleGrid()" id="btn-grid" class="control-btn active tooltip" data-tip="Grid Reference"><i data-lucide="grid-3x3" class="w-5 h-5"></i></button>
+                        <button onclick="toggleSection()" id="btn-section" class="control-btn tooltip" data-tip="Section Plane"><i data-lucide="slice" class="w-5 h-5"></i></button>
+                        <button onclick="toggleXray()" id="btn-xray" class="control-btn tooltip" data-tip="X-Ray Scan"><i data-lucide="scan-line" class="w-5 h-5"></i></button>
                     </div>
                 </div>
             </div>
 
-            <!-- Right Side -->
+            <!-- Right Panel: Controls & Library -->
             <div class="w-80 flex flex-col gap-8">
-                <div id="panel-context-controls" class="glass-panel p-8 rounded-[3.5rem] shadow-sm">
+                <div id="panel-context-controls" class="glass-panel p-8 rounded-[3.5rem] shadow-sm panel-active-outline">
                     <div id="survey-controls" class="space-y-8">
-                        <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-400">Geotechnical Audit</h2>
+                        <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-400">Borehole Control</h2>
                         <div class="space-y-6">
                             <div class="space-y-3">
                                 <div class="flex justify-between text-[11px] font-black text-stone-700 uppercase tracking-tighter">
-                                    <span>Borehole Section Plane</span>
-                                    <span id="val-strata" class="metric-value text-stone-900 bg-stone-200 px-2 py-0.5 rounded">0.0m</span>
+                                    <span>Depth Scan</span>
+                                    <span id="val-strata" class="metric-value text-accent font-black">0.0m</span>
                                 </div>
-                                <input type="range" class="w-full h-2.5 bg-stone-300 rounded-full appearance-none accent-stone-900 cursor-pointer" min="0" max="40" step="1" value="0" oninput="updateBoreholeSection(this.value)">
+                                <input type="range" class="w-full h-2.5 bg-stone-200 rounded-full appearance-none accent-stone-900 cursor-pointer" min="0" max="40" step="1" value="0" oninput="updateBoreholeSection(this.value)">
                             </div>
                         </div>
                     </div>
-                    
                     <div id="analysis-controls" class="space-y-8 hidden">
-                        <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-400">FEA Simulation</h2>
-                        <button onclick="runFEA()" id="btn-fea-solve" class="w-full text-white py-6 rounded-[2rem] text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3 shadow-2xl transition-all" style="background-color: var(--ws-accent);">
-                            <i data-lucide="zap" class="w-5 h-5"></i> Execute Solver
+                        <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-400">Structural Solve</h2>
+                        <button onclick="runFEA()" id="btn-fea-solve" class="w-full text-white py-6 rounded-[2rem] text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3 shadow-2xl transition-all bg-accent">
+                            <i data-lucide="zap" class="w-5 h-5"></i> Run Physics Solver
                         </button>
-                        <div class="hud-stat bg-white mt-4">
-                            <span class="text-[10px] font-black text-stone-500 uppercase tracking-widest block mb-2">Max Stress Load</span>
+                        <div class="hud-stat bg-white mt-4 border border-stone-200">
+                            <span class="text-[9px] font-black text-stone-400 uppercase tracking-widest block mb-2">Max Stress</span>
                             <span id="val-stress" class="metric-value text-3xl text-stone-900 font-black">0.00 <span class="text-sm text-stone-300">MPa</span></span>
                         </div>
                     </div>
                 </div>
 
-                <div class="glass-panel p-8 rounded-[3.5rem] flex-1 flex flex-col shadow-sm overflow-hidden">
-                    <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-400 mb-6">Engineering Journal</h2>
-                    <div id="log" class="flex-1 font-mono text-[10px] text-stone-600 space-y-3 overflow-y-auto pr-2 custom-scrollbar"></div>
+                <!-- Reference Library Database -->
+                <div class="glass-panel p-8 rounded-[3.5rem] flex-1 flex flex-col shadow-sm overflow-hidden panel-active-outline">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-400">Library</h2>
+                        <i data-lucide="book-open" class="w-4 h-4 text-stone-400"></i>
+                    </div>
+                    <div class="mb-4">
+                        <input type="text" id="lib-search" oninput="searchDatabase(this.value)" placeholder="Search Standards (e.g. ASTM)..." class="w-full bg-stone-200/50 border border-stone-300 rounded-xl p-3 text-[10px] font-bold outline-none focus:border-stone-500">
+                    </div>
+                    <div id="db-content" class="flex-1 overflow-y-auto pr-2 custom-scrollbar text-[10px] font-medium space-y-1">
+                        <!-- DB Items -->
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Footer -->
         <div class="mt-8 flex justify-between items-center text-[10px] text-stone-500 font-mono font-bold tracking-[0.3em] uppercase pt-6 border-t border-stone-300/40">
-            <span id="coord-display">LOCAL_REF: [00.00, 00.00, 0.00]</span>
-            <span>BUILD: 7.6.0_WM_EXPORT</span>
+            <span id="coord-display">REF_COORDS: [00.00, 00.00, 0.00]</span>
+            <span class="text-accent">BUILD 7.7.2 PRO_DATABASE_SYNC</span>
         </div>
     </div>
 
@@ -314,166 +300,98 @@
         let demoScene, demoCamera, demoRenderer, demoBuilding, demoScanner;
         let activeWorkspace = 'survey', isSolving = false, selectedEntityId = null;
         let sectionActive = false, xrayActive = false;
-
-        // Action Stack for Undo
-        let actionStack = [];
-        // Management Audit Trail
-        let projectActivityLedger = [];
+        let actionStack = [], activityLedger = [];
 
         const DISCIPLINE_COLORS = { survey: '#065f46', design: '#1e40af', analysis: '#991b1b' };
 
+        const STANDARDS_DB = [
+            { code: "ASTM D2487", field: "Geology", desc: "Standard Practice for Classification of Soils for Engineering Purposes." },
+            { code: "ACI 318", field: "Structural", desc: "Building Code Requirements for Structural Concrete." },
+            { code: "AISC 360", field: "Structural", desc: "Specification for Structural Steel Buildings." },
+            { code: "ASCE 7", field: "Civil", desc: "Minimum Design Loads and Associated Criteria for Buildings." },
+            { code: "ASTM D1586", field: "Geology", desc: "Standard Test Method for Standard Penetration Test (SPT)." },
+            { code: "EN 1992", field: "Structural", desc: "Eurocode 2: Design of concrete structures." },
+            { code: "ASTM C39", field: "Analysis", desc: "Standard Test Method for Compressive Strength of Cylindrical Concrete Specimens." }
+        ];
+
         function init() {
             initLoaderVisuals();
-            
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0xe7e5e4); 
+            scene = new THREE.Scene(); scene.background = new THREE.Color(0xe7e5e4); 
             scene.fog = new THREE.FogExp2(0xe7e5e4, 0.0004);
-            
-            camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.5, 100000);
-            
+            camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.5, 100000);
             renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             renderer.shadowMap.enabled = true;
             renderer.localClippingEnabled = true;
             document.getElementById('canvas-container').appendChild(renderer.domElement);
-
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
             setCameraView('iso');
 
             scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-            const sun = new THREE.DirectionalLight(0xffffff, 0.8);
-            sun.position.set(500, 1000, 500);
-            sun.castShadow = true;
-            scene.add(sun);
+            const sun = new THREE.DirectionalLight(0xffffff, 0.8); sun.position.set(500, 1000, 500);
+            sun.castShadow = true; scene.add(sun);
 
             globalSectionPlane = new THREE.Plane(new THREE.Vector3(1, 0, 0), 10000); 
             boreholePlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 10000);   
 
             createTopography();
-            bimModel = new THREE.Group();
-            scene.add(bimModel);
-
-            addBIMComponent('MASTER_CORE_NODE', 'IfcSlab', 'Concrete_C40_PBR', new THREE.Vector3(0, 12, 0), new THREE.Vector3(160, 6, 100), true);
+            bimModel = new THREE.Group(); scene.add(bimModel);
+            addBIMComponent('MASTER_FOUNDATION_NODE', 'IfcSlab', 'Concrete_C40_Structural', new THREE.Vector3(0, 12, 0), new THREE.Vector3(160, 6, 100), true);
 
             setupHandlers();
+            searchDatabase(""); // Initial Load
             animate();
             if (typeof lucide !== 'undefined') lucide.createIcons();
-            
-            logActivity("Session Initialized", "SYSTEM_BOOT");
         }
 
-        // --- Project Work Management & Undo Logic ---
-
-        function logActivity(message, actionCode) {
-            const timestamp = new Date().toISOString();
-            projectActivityLedger.push({ timestamp, message, actionCode });
-            log(message, actionCode === 'FEA_SOLVE' ? 'zap' : 'info');
-        }
-
-        function pushAction(action) {
-            actionStack.push(action);
-            if (actionStack.length > 50) actionStack.shift(); // Max 50 undos
-        }
-
-        function undoAction() {
-            if (actionStack.length === 0) {
-                log("No actions left to undo.", "alert-circle");
-                return;
-            }
-            const action = actionStack.pop();
-            logActivity(`UNDO: Reversed ${action.type} for ${action.target.userData.name}`, "UNDO_EVENT");
-
-            switch (action.type) {
-                case 'ADD':
-                    bimModel.remove(action.target);
-                    break;
-                case 'DELETE':
-                    bimModel.add(action.target);
-                    break;
-                case 'VISIBILITY':
-                    action.target.visible = action.oldState;
-                    action.target.userData.visible = action.oldState;
-                    break;
-            }
-            updateTree();
-        }
-
-        function exportProjectAudit() {
-            logActivity("Generating Project Management & Engineering Report", "EXPORT_REPORT");
-            
-            // 1. Generate Activity Ledger Report
-            let report = `TERRASCAN PROJECT ACTIVITY LEDGER\n`;
-            report += `====================================\n`;
-            report += `Project Generated: ${new Date().toLocaleString()}\n`;
-            report += `Total Entities: ${bimModel.children.length}\n\n`;
-            report += `TIMESTAMP | ACTIVITY LOG\n`;
-            report += `------------------------------------\n`;
-            projectActivityLedger.forEach(item => {
-                report += `[${item.timestamp}] ${item.message}\n`;
+        // --- Database Searching ---
+        function searchDatabase(query) {
+            const container = document.getElementById('db-content');
+            if (!container) return;
+            container.innerHTML = '';
+            const filtered = STANDARDS_DB.filter(s => 
+                s.code.toLowerCase().includes(query.toLowerCase()) || 
+                s.desc.toLowerCase().includes(query.toLowerCase())
+            );
+            filtered.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'database-item';
+                div.innerHTML = `
+                    <div class="flex justify-between mb-1">
+                        <span class="font-black text-stone-900">${item.code}</span>
+                        <span class="text-[8px] uppercase px-1.5 py-0.5 rounded-full bg-stone-200 text-stone-500">${item.field}</span>
+                    </div>
+                    <div class="text-stone-500 leading-tight">${item.desc}</div>
+                `;
+                container.appendChild(div);
             });
-
-            const blob = new Blob([report], {type:'text/plain'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url; a.download = `TERRASCAN_ACTIVITY_REPORT_${Date.now()}.txt`;
-            a.click();
-
-            // 2. Standard IFC Export (Mock)
-            log("SERIALIZING IFC STEP 2x3...", "share-2");
-            const ifcBlob = new Blob(["ISO-10303-21;HEADER;FILE_SCHEMA(('IFC2X3'));ENDSEC;DATA;ENDSEC;END-ISO-10303-21;"], {type:'text/plain'});
-            const ifcA = document.createElement('a');
-            ifcA.href = URL.createObjectURL(ifcBlob);
-            ifcA.download = `TS_BIM_PRO_${Date.now()}.ifc`;
-            ifcA.click();
-            
-            logActivity("Report and Model Export Complete", "EXPORT_SUCCESS");
         }
 
-        // --- Core Workspace Functionality ---
-
-        function updateBoreholeSection(v) {
-            const depth = parseFloat(v);
-            document.getElementById('val-strata').innerText = depth.toFixed(1) + "m";
-            boreholePlane.constant = 25 - depth; 
-            const scanBar = document.getElementById('main-scan-line');
-            if(depth > 0) scanBar.classList.add('scan-active');
-            else scanBar.classList.remove('scan-active');
-        }
-
-        function createTopography() {
-            const geo = new THREE.PlaneGeometry(2000, 2000, 100, 100);
-            const pos = geo.attributes.position.array;
-            for(let i=0; i<pos.length; i+=3) pos[i+2] = Math.sin(pos[i]*0.008) * Math.cos(pos[i+1]*0.008) * 35;
-            geo.computeVertexNormals();
-            terrain = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ 
-                color: 0xd6d3d1, roughness: 0.9, clippingPlanes: [globalSectionPlane, boreholePlane] 
-            }));
-            terrain.rotation.x = -Math.PI/2;
-            scene.add(terrain);
-
-            gridHelper = new THREE.GridHelper(2000, 40, 0x000000, 0x000000);
-            gridHelper.material.opacity = 0.08; gridHelper.material.transparent = true;
-            gridHelper.position.y = -35;
-            scene.add(gridHelper);
-        }
-
+        // --- Multi-Color Workspace Shell ---
         function switchWorkspace(ws) {
             activeWorkspace = ws;
             const accent = DISCIPLINE_COLORS[ws];
             document.documentElement.style.setProperty('--ws-accent', accent);
+            
             const labels = { survey: 'Geology', design: 'Structural', analysis: 'Civil Physics' };
-            document.getElementById('active-discipline-label').innerText = labels[ws];
+            const labelEl = document.getElementById('active-discipline-label');
+            if(labelEl) labelEl.innerText = labels[ws];
+
             ['survey', 'design', 'analysis'].forEach(m => {
                 const btn = document.getElementById(`ws-${m}`);
                 if(btn) btn.classList.toggle('active', m === ws);
             });
-            document.getElementById('survey-controls').classList.toggle('hidden', ws !== 'survey');
-            document.getElementById('analysis-controls').classList.toggle('hidden', ws !== 'analysis');
+            
+            const surveyCtrl = document.getElementById('survey-controls');
+            const analysisCtrl = document.getElementById('analysis-controls');
+            if(surveyCtrl) surveyCtrl.classList.toggle('hidden', ws !== 'survey');
+            if(analysisCtrl) analysisCtrl.classList.toggle('hidden', ws !== 'analysis');
+
             if (terrain && terrain.material) terrain.material.wireframe = (ws === 'survey');
             updateTree();
-            logActivity(`Context Lock: ${ws.toUpperCase()}`, "WORKSPACE_SWITCH");
+            log(`CONTEXT_SWAP: Switching to ${ws.toUpperCase()} Shell. Database Synced.`, "refresh-cw");
         }
 
         function addBIMComponent(name, type, material, pos, scale, suppressLog = false) {
@@ -484,21 +402,16 @@
             mesh.userData = { id: 'TS_PRO_'+Math.random().toString(36).substr(2,4).toUpperCase(), name, type, material, visible: true };
             bimModel.add(mesh);
             updateTree();
-            
-            if (!suppressLog) {
-                pushAction({ type: 'ADD', target: mesh });
-                logActivity(`Component Created: ${name}`, "ENTITY_ADD");
-            }
+            if (!suppressLog) actionStack.push({ type: 'ADD', target: mesh });
             return mesh;
         }
 
         function updateTree() {
-            const tree = document.getElementById('bim-tree'); 
-            if(!tree) return; tree.innerHTML = '';
+            const tree = document.getElementById('bim-tree'); if(!tree) return; tree.innerHTML = '';
             bimModel.children.forEach(child => {
                 const d = child.userData;
                 const node = document.createElement('div');
-                node.className = `bim-node p-4 flex items-center justify-between bg-stone-100/50 border border-stone-200 ${selectedEntityId === d.id ? 'selected' : ''}`;
+                node.className = `bim-node ${selectedEntityId === d.id ? 'selected' : ''}`;
                 node.onclick = () => inspectElement(d);
                 node.innerHTML = `
                     <div class="flex items-center gap-4">
@@ -506,161 +419,139 @@
                         <span class="text-[10px] font-black uppercase text-stone-800">${d.name}</span>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="toggleVisibility('${d.id}', event)" class="p-1 hover:bg-stone-200 rounded-lg"><i data-lucide="${child.visible ? 'eye' : 'eye-off'}" class="w-3.5 h-3.5"></i></button>
-                        <button onclick="deleteEntity('${d.id}', event)" class="p-1 hover:bg-red-50 hover:text-red-600 rounded-lg"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                        <button onclick="toggleVisibility('${d.id}', event)" class="p-1 hover:bg-stone-200 rounded-lg"><i data-lucide="${child.visible ? 'eye' : 'eye-off'}" class="w-3.5 h-3.5 text-stone-400"></i></button>
                     </div>`;
                 tree.appendChild(node);
             });
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
-        function parseOBJ(data, filename) {
-            logActivity(`De-archiving OBJ: ${filename}`, "INGEST_OBJ");
-            const loader = new THREE.OBJLoader();
-            try {
-                const obj = loader.parse(data);
-                const bbox = new THREE.Box3().setFromObject(obj);
-                const center = new THREE.Vector3();
-                bbox.getCenter(center);
-                obj.position.sub(center); obj.position.y += 25; 
-                
-                const id = 'OBJ_'+Date.now();
-                obj.userData = { id, name: filename, type: 'Imported_Mesh', visible: true };
-                obj.traverse(c => {
-                    if (c.isMesh) c.material = new THREE.MeshStandardMaterial({ color: 0x6b7280, clippingPlanes: [globalSectionPlane, boreholePlane] });
-                });
-                bimModel.add(obj);
-                pushAction({ type: 'ADD', target: obj });
-                updateTree();
-                logActivity(`Ingest Success: ${filename} origin synchronized.`, "INGEST_SUCCESS");
-            } catch (err) {
-                log("FAIL: OBJ geometry malformed.", "alert-triangle");
+        function undoAction() {
+            if (!actionStack.length) return;
+            const action = actionStack.pop();
+            if (action.type === 'ADD') bimModel.remove(action.target);
+            updateTree();
+            log("UNDO: Last spatial operation reversed.", "rotate-ccw");
+        }
+
+        function exportProjectAudit() {
+            log("SERIALIZING PROJECT REPORT...", "file-text");
+            const report = `TERRASCAN ENGINEERING REPORT\nBUILD 7.7.2 PRO\nEntities Detected: ${bimModel.children.length}\nDate: ${new Date().toISOString()}`;
+            const blob = new Blob([report], {type:'text/plain'});
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+            a.download = `TERRASCAN_REPORT_${Date.now()}.txt`; a.click();
+        }
+
+        // --- Visual Systems ---
+        function updateBoreholeSection(v) {
+            const depth = parseFloat(v);
+            const strataVal = document.getElementById('val-strata');
+            if(strataVal) strataVal.innerText = depth.toFixed(1) + "m";
+            boreholePlane.constant = 25 - depth; 
+            const scanBar = document.getElementById('main-scan-line');
+            if(scanBar) {
+                if(depth > 0) scanBar.classList.add('scan-active'); else scanBar.classList.remove('scan-active');
             }
         }
 
-        function handleFileSelect(e) {
-            Array.from(e.target.files).forEach(file => {
-                const reader = new FileReader();
-                reader.onload = (ev) => { if (file.name.toLowerCase().endsWith('.obj')) parseOBJ(ev.target.result, file.name); };
-                reader.readAsText(file);
-            });
-            e.target.value = ''; 
+        function createTopography() {
+            const geo = new THREE.PlaneGeometry(2000, 2000, 100, 100);
+            const pos = geo.attributes.position.array;
+            for(let i=0; i<pos.length; i+=3) pos[i+2] = Math.sin(pos[i]*0.008) * Math.cos(pos[i+1]*0.008) * 35;
+            geo.computeVertexNormals();
+            terrain = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0xd6d3d1, roughness: 0.9, clippingPlanes: [globalSectionPlane, boreholePlane] }));
+            terrain.rotation.x = -Math.PI/2; scene.add(terrain);
+            gridHelper = new THREE.GridHelper(2000, 40, 0x000000, 0x000000);
+            gridHelper.material.opacity = 0.08; gridHelper.material.transparent = true;
+            gridHelper.position.y = -35; scene.add(gridHelper);
         }
 
         function runFEA() {
             if(isSolving || !bimModel.children.length) return;
-            isSolving = true;
-            logActivity("FEA SOLVER: Processing structural harmonic mesh...", "FEA_SOLVE");
-            const scanBar = document.getElementById('main-scan-line');
-            scanBar.classList.add('scan-active');
-
+            isSolving = true; log("FEA: Initializing High-Fidelity Physics Solver...", "zap");
+            const scanBar = document.getElementById('main-scan-line'); if(scanBar) scanBar.classList.add('scan-active');
             let p = 0;
             const t = setInterval(() => {
                 p += 0.5;
                 const stress = (p * 14.2).toFixed(2);
-                document.getElementById('val-stress').innerText = stress + " MPa";
-                bimModel.children.forEach(m => { 
-                    m.traverse(node => { if(node.isMesh) node.material.color.lerp(new THREE.Color(0xd97706), 0.05); }); 
-                });
-                if(p >= 10) { 
-                    clearInterval(t); isSolving = false; scanBar.classList.remove('scan-active');
-                    logActivity(`FEA Result: Max Stress ${stress} MPa localized.`, "SOLVE_RESULT"); 
-                }
+                const stressVal = document.getElementById('val-stress');
+                if(stressVal) stressVal.innerText = stress + " MPa";
+                bimModel.children.forEach(m => { m.traverse(node => { if(node.isMesh) node.material.color.lerp(new THREE.Color(0xd97706), 0.05); }); });
+                if(p >= 10) { clearInterval(t); isSolving = false; if(scanBar) scanBar.classList.remove('scan-active'); log(`SOLVE COMPLETE: Max Stress ${stress} MPa.`, "info"); }
             }, 80);
         }
 
         function inspectElement(ent) {
             selectedEntityId = ent.id; updateTree();
             const p = document.getElementById('property-panel');
-            p.innerHTML = `
-                <div class="space-y-6 fade-in-up">
-                    <div class="p-5 bg-stone-900 text-stone-100 rounded-[1.75rem] border-l-4" style="border-color: var(--ws-accent);">
-                        <span class="text-[9px] font-black uppercase text-stone-500 mb-2 block tracking-widest">System GUID</span>
-                        <div class="font-mono text-[9px] break-all leading-tight">${ent.id}</div>
-                    </div>
-                    <div class="space-y-2">
-                        <div class="p-4 bg-white border border-stone-200 rounded-2xl flex justify-between items-center shadow-sm">
-                            <span class="text-stone-400 uppercase text-[9px] font-black">Functional Class</span>
-                            <span class="text-[10px] font-black">${ent.type}</span>
+            if(p) {
+                p.innerHTML = `
+                    <div class="space-y-6 fade-in-up">
+                        <div class="p-5 bg-stone-900 text-stone-100 rounded-[1.75rem] border-l-4" style="border-color: var(--ws-accent);">
+                            <span class="text-[9px] font-black uppercase text-stone-500 mb-2 block tracking-widest">System GUID</span>
+                            <div class="font-mono text-[9px] break-all leading-tight">${ent.id}</div>
                         </div>
-                    </div>
-                </div>`;
-            
+                        <div class="space-y-2">
+                            <div class="p-4 bg-white border border-stone-200 rounded-2xl flex justify-between items-center shadow-sm">
+                                <span class="text-stone-400 uppercase text-[9px] font-black">Functional Class</span>
+                                <span class="text-[10px] font-black text-accent">${ent.type}</span>
+                            </div>
+                        </div>
+                    </div>`;
+            }
             bimModel.children.forEach(m => { 
                 const isSelected = m.userData.id === ent.id;
                 m.traverse(node => { if(node.isMesh) { node.material.emissive.set(isSelected ? 0x0891b2 : 0x000000); node.material.emissiveIntensity = 0.6; } });
                 if(isSelected) {
-                    const bbox = new THREE.Box3().setFromObject(m);
-                    const center = new THREE.Vector3();
-                    bbox.getCenter(center);
+                    const bbox = new THREE.Box3().setFromObject(m); const center = new THREE.Vector3(); bbox.getCenter(center);
                     controls.target.lerp(center, 0.1); controls.update();
                 }
             });
         }
 
-        // --- Interaction Logic & Visibility ---
-
-        function toggleVisibility(id, e) {
-            e.stopPropagation();
-            const c = bimModel.children.find(x => x.userData.id === id);
-            if(c) {
-                pushAction({ type: 'VISIBILITY', target: c, oldState: c.visible });
-                c.visible = !c.visible;
-                c.userData.visible = c.visible;
-                updateTree();
-                logActivity(`Visibility Shift: ${c.userData.name}`, "STATE_TOGGLE");
-            }
+        // --- Interaction & Ingest ---
+        function triggerImport() { document.getElementById('file-input').click(); }
+        function handleFileSelect(e) {
+            Array.from(e.target.files).forEach(file => {
+                const reader = new FileReader(); log(`INGESTING: ${file.name}...`, "upload");
+                reader.onload = (ev) => { if (file.name.toLowerCase().endsWith('.obj')) parseOBJ(ev.target.result, file.name); };
+                reader.readAsText(file);
+            });
+            e.target.value = ''; 
+        }
+        function parseOBJ(data, filename) {
+            const loader = new THREE.OBJLoader();
+            try {
+                const obj = loader.parse(data);
+                const bbox = new THREE.Box3().setFromObject(obj); const center = new THREE.Vector3(); bbox.getCenter(center);
+                obj.position.sub(center); obj.position.y += 25; 
+                obj.userData = { id: 'OBJ_'+Date.now(), name: filename, type: 'Imported_Mesh', visible: true };
+                obj.traverse(c => { if (c.isMesh) c.material = new THREE.MeshStandardMaterial({ color: 0x6b7280, clippingPlanes: [globalSectionPlane, boreholePlane] }); });
+                bimModel.add(obj); actionStack.push({ type: 'ADD', target: obj }); updateTree(); log(`SUCCESS: OBJ ${filename} online.`, "check-circle-2");
+            } catch (err) { log("FAIL: Reconstruction error.", "alert-triangle"); }
         }
 
-        function deleteEntity(id, e) {
-            e.stopPropagation();
-            const c = bimModel.children.find(x => x.userData.id === id);
-            if(c) {
-                pushAction({ type: 'DELETE', target: c });
-                bimModel.remove(c);
-                updateTree();
-                if(selectedEntityId === id) document.getElementById('property-panel').innerHTML = '';
-                logActivity(`Element Purged: ${c.userData.name}`, "ENTITY_DELETE");
-            }
-        }
-
-        function showAllEntities() {
-            bimModel.children.forEach(m => { m.visible = true; m.userData.visible = true; });
-            updateTree();
-            logActivity("Global visibility reset authorized.", "UI_CMD");
-        }
-
-        function clearEntities() {
-            bimModel.clear();
-            updateTree();
-            document.getElementById('property-panel').innerHTML = '';
-            logActivity("Total project domain reset executed.", "PURGE_ALL");
-        }
-
-        // --- System Utilities ---
-
+        // --- Loader & HUD Utils ---
         function initLoaderVisuals() {
             demoScene = new THREE.Scene(); demoScene.background = new THREE.Color(0xf1f0ee);
-            demoCamera = new THREE.PerspectiveCamera(40, (window.innerWidth*0.58) / window.innerHeight, 0.1, 1000);
+            demoCamera = new THREE.PerspectiveCamera(40, (window.innerWidth*0.58)/window.innerHeight, 0.1, 1000);
             demoCamera.position.set(20, 25, 45); demoCamera.lookAt(0, 15, 0);
             demoRenderer = new THREE.WebGLRenderer({ antialias: true });
-            demoRenderer.setSize(window.innerWidth * 0.58, window.innerHeight);
-            document.getElementById('failure-demo-container').appendChild(demoRenderer.domElement);
-
+            demoRenderer.setSize(window.innerWidth*0.58, window.innerHeight);
+            const demoContainer = document.getElementById('failure-demo-container');
+            if(demoContainer) demoContainer.appendChild(demoRenderer.domElement);
+            
             demoBuilding = new THREE.Group();
             for(let i=0; i<12; i++) {
                 const floor = new THREE.Mesh(new THREE.BoxGeometry(16, 0.5, 16), new THREE.MeshStandardMaterial({ color: 0xa8a29e, wireframe: true, transparent: true, opacity: 0.15 }));
-                floor.position.y = i * 4.5;
-                demoBuilding.add(floor);
+                floor.position.y = i * 4.5; demoBuilding.add(floor);
                 [[-8,-8], [8,-8], [-8,8], [8,8]].forEach(pos => {
                     const beam = new THREE.Mesh(new THREE.BoxGeometry(0.4, 5, 0.4), new THREE.MeshStandardMaterial({ color: 0x292524 }));
-                    beam.position.set(pos[0], i*4.5 - 2.25, pos[1]);
-                    demoBuilding.add(beam);
+                    beam.position.set(pos[0], i*4.5 - 2.25, pos[1]); demoBuilding.add(beam);
                 });
             }
             demoScene.add(demoBuilding);
-            const scanMat = new THREE.MeshStandardMaterial({ color: 0x0891b2, transparent: true, opacity: 0.5, side: THREE.DoubleSide, emissive: 0x0891b2, emissiveIntensity: 2.5 });
-            demoScanner = new THREE.Mesh(new THREE.PlaneGeometry(35, 35), scanMat);
+            demoScanner = new THREE.Mesh(new THREE.PlaneGeometry(35, 35), new THREE.MeshStandardMaterial({ color: 0x0891b2, transparent: true, opacity: 0.5, side: THREE.DoubleSide, emissive: 0x0891b2, emissiveIntensity: 2.5 }));
             demoScanner.rotation.x = Math.PI / 2; demoScene.add(demoScanner);
             demoScene.add(new THREE.AmbientLight(0xffffff, 0.6));
             animateDemo();
@@ -668,14 +559,15 @@
 
         let scanY = 0, scanDir = 1;
         function animateDemo() {
-            if(!demoRenderer) return;
-            requestAnimationFrame(animateDemo);
-            scanY += 0.12 * scanDir;
-            if(scanY > 50 || scanY < 0) scanDir *= -1;
+            if(!demoRenderer) return; requestAnimationFrame(animateDemo);
+            scanY += 0.12 * scanDir; if(scanY > 50 || scanY < 0) scanDir *= -1;
             demoScanner.position.y = scanY;
-            document.getElementById('demo-height-val').innerText = `${scanY.toFixed(2)}m`;
-            document.getElementById('demo-freq-val').innerText = `${(Math.abs(Math.sin(scanY * 0.1)) * 1.5 + 0.8).toFixed(2)} Hz`;
-            document.getElementById('demo-progress-fill').style.width = `${(scanY / 50) * 100}%`;
+            const hVal = document.getElementById('demo-height-val');
+            const pFill = document.getElementById('demo-progress-fill');
+            const dStatus = document.getElementById('demo-status');
+            if(hVal) hVal.innerText = `${scanY.toFixed(2)}m`;
+            if(pFill) pFill.style.width = `${(scanY/50)*100}%`;
+            if(dStatus) dStatus.innerText = scanDir > 0 ? "UPWARD SCAN..." : "DOWNWARD SCAN...";
             demoBuilding.rotation.y += 0.0015; demoRenderer.render(demoScene, demoCamera);
         }
 
@@ -683,10 +575,16 @@
             document.getElementById('loader-overlay').style.opacity = '0';
             setTimeout(() => {
                 document.getElementById('loader-overlay').style.display = 'none';
-                if(demoRenderer) demoRenderer.dispose(); demoRenderer = null;
-                document.getElementById('main-ui').classList.remove('pointer-events-none');
-                document.getElementById('main-ui').style.opacity = '1';
-                logActivity("Spatial Intelligence Core Sync Successful.", "BOOT_END");
+                if(demoRenderer) {
+                    demoRenderer.dispose();
+                    demoRenderer = null;
+                }
+                const mainUi = document.getElementById('main-ui');
+                if(mainUi) {
+                    mainUi.classList.remove('pointer-events-none');
+                    mainUi.style.opacity = '1';
+                }
+                log("Kernel Authorized. Shell: GEOLOGY.", "shield-check");
             }, 800);
         }
 
@@ -702,28 +600,37 @@
         function toggleSection() { sectionActive = !sectionActive; document.getElementById('btn-section').classList.toggle('active'); globalSectionPlane.constant = sectionActive ? 0 : 10000; }
         function toggleXray() { xrayActive = !xrayActive; document.getElementById('btn-xray').classList.toggle('active'); bimModel.children.forEach(m => { m.traverse(node => { if(node.isMesh) { node.material.transparent = xrayActive; node.material.opacity = xrayActive ? 0.35 : 1.0; node.material.wireframe = xrayActive; } }); }); }
 
+        function toggleVisibility(id, e) {
+            e.stopPropagation();
+            const c = bimModel.children.find(x => x.userData.id === id);
+            if(c) {
+                c.visible = !c.visible;
+                updateTree();
+            }
+        }
+
+        function clearEntities() {
+            bimModel.clear();
+            updateTree();
+            document.getElementById('property-panel').innerHTML = '';
+            log("Project domain purged.", "trash-2");
+        }
+
         function log(m, icon = "info") {
             const l = document.getElementById('log'); if(!l) return;
-            const d = document.createElement('div'); d.className = "flex items-start border-b border-stone-200 pb-3 transition-all animate-in slide-in-from-left";
+            const d = document.createElement('div'); d.className = "flex items-start border-b border-stone-200 pb-3 transition-all";
             d.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4 mr-3 text-stone-400"></i><span class="text-[11px] leading-snug">${m}</span>`;
             l.prepend(d); if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
         function animate() { requestAnimationFrame(animate); if (controls) controls.update(); renderer.render(scene, camera); }
-        
         function setupHandlers() {
             window.addEventListener('resize', () => {
-                if(camera && renderer) { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); }
-                if(demoCamera && demoRenderer) { demoCamera.aspect = (window.innerWidth*0.58)/window.innerHeight; demoCamera.updateProjectionMatrix(); demoRenderer.setSize(window.innerWidth*0.58, window.innerHeight); }
+                if(camera && renderer) { camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); }
             });
             document.getElementById('canvas-container').addEventListener('mousemove', (e) => {
-                mouse.x = (e.clientX / window.innerWidth) * 2 - 1; mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+                mouse.x = (e.clientX/window.innerWidth)*2-1; mouse.y = -(e.clientY/window.innerHeight)*2+1;
                 document.getElementById('coord-display').innerText = `LOCAL_REF: [${(mouse.x*800).toFixed(2)}, ${(mouse.y*800).toFixed(2)}, 0.00]`;
-            });
-            document.getElementById('canvas-container').addEventListener('mousedown', () => {
-                raycaster.setFromCamera(mouse, camera); 
-                const hits = raycaster.intersectObjects(bimModel.children, true);
-                if(hits.length > 0) { let t = hits[0].object; while(t && !t.userData.id && t.parent) t = t.parent; if(t && t.userData.id) inspectElement(t.userData); }
             });
         }
 
