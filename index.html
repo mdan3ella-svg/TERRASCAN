@@ -3,1239 +3,825 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TERRASCAN Infinite | XR Spatial Analysis</title>
+    <title>TRAX | Data Integrated Management Auditor</title>
+    
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/lucide/0.263.0/lucide.min.js"></script>
+    
+    <!-- Import Map -->
+    <script type="importmap">
+        {
+            "imports": {
+                "react": "https://esm.sh/react@18.2.0",
+                "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+                "three": "https://esm.sh/three@0.160.0",
+                "@react-three/fiber": "https://esm.sh/@react-three/fiber@8.15.16?external=react,react-dom,three",
+                "@react-three/drei": "https://esm.sh/@react-three/drei@9.99.0?external=react,react-dom,three,@react-three/fiber",
+                "lucide-react": "https://esm.sh/lucide-react@0.344.0?external=react",
+                "uuid": "https://esm.sh/uuid@9.0.1",
+                "framer-motion": "https://esm.sh/framer-motion@10.16.4?external=react"
+            }
+        }
+    </script>
+
+    <!-- Babel -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Anton&display=swap');
-
-        :root {
-            /* Cyber Desert Light Palette */
-            --terra-bg-radial: radial-gradient(circle at center, #fdfbf7 0%, #f3eacb 100%);
-            --terra-bg-solid: #f3eacb;
-            
-            --terra-panel: rgba(255, 255, 255, 0.4);
-            --terra-border: #78350f; /* Copper */
-            
-            --terra-text-main: #451a03; /* Deep Bronze */
-            --terra-text-muted: #92400e; 
-            
-            /* Discipline Colors */
-            --color-survey: #059669;   /* Emerald */
-            --color-design: #0284c7;   /* Blue */
-            --color-analysis: #be123c; /* Red */
-            --color-immersive: #7c3aed; /* Violet for XR */
-            
-            --ws-accent: var(--color-survey);
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;700;800&display=swap');
+        
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 2px; }
+        
+        body { 
+            overflow: hidden; 
+            background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 100%);
+            font-family: 'JetBrains Mono', monospace; 
+            color: #1e293b;
         }
-
-        body, html { 
-            margin: 0; padding: 0; overflow: hidden; height: 100%; 
-            background: var(--terra-bg-radial);
-            font-family: 'Inter', sans-serif; 
-            color: var(--terra-text-main); 
-            -webkit-font-smoothing: antialiased;
-            transition: background-color 0.8s ease;
-        }
-
-        /* --- Workspace & Panel Styling --- */
+        
+        /* White Glass Panel */
         .glass-panel { 
-            background: rgba(255, 255, 255, 0.6); 
-            backdrop-filter: blur(12px); 
-            border: 1px solid rgba(120, 53, 15, 0.2);
-            box-shadow: 0 4px 20px rgba(120, 53, 15, 0.05);
-            pointer-events: auto;
-            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.75); 
+            backdrop-filter: blur(24px); 
+            border: 1px solid rgba(255, 255, 255, 0.9); 
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08); 
+        }
+
+        /* Tooltip Arrow Styling */
+        .tooltip-arrow {
+            position: absolute;
+            top: -4px;
+            left: 50%;
+            transform: translateX(-50%) rotate(45deg);
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-top: 1px solid rgba(226, 232, 240, 1);
+            border-left: 1px solid rgba(226, 232, 240, 1);
         }
         
-        .panel-active-outline {
-            border-color: var(--ws-accent) !important;
-            box-shadow: 0 0 0 1px var(--ws-accent), 0 10px 25px -5px rgba(0,0,0,0.1);
-        }
-
-        .text-accent { color: var(--ws-accent); transition: color 0.4s ease; }
-        .bg-accent { background-color: var(--ws-accent); transition: background-color 0.4s ease; }
-
-        .ui-overlay { pointer-events: none; }
-        .ui-layout-col { pointer-events: none; }
-        button, input, select, .bim-node, .database-item { pointer-events: auto; }
-
-        .workspace-btn { 
-            @apply px-4 py-3 text-[9px] font-black uppercase tracking-[0.15em] transition-all border-b-2 border-transparent text-stone-500 hover:text-stone-800 flex items-center gap-2; 
-            pointer-events: auto;
-        }
-        .workspace-btn.active { 
-            @apply text-stone-900 bg-white/60 rounded-t-xl shadow-sm; 
-            border-bottom-color: var(--ws-accent); 
-        }
-        .workspace-btn.active i { color: var(--ws-accent); }
-
-        .control-btn { 
-            @apply p-3 rounded-2xl bg-white/80 border border-stone-300 hover:border-stone-500 hover:shadow-lg transition-all duration-300 text-stone-600 active:scale-90 flex items-center justify-center; 
-        }
-        .control-btn.active { 
-            background: var(--ws-accent) !important; 
-            color: #fff !important; 
-            border-color: var(--ws-accent); 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-
-        .ingest-btn { 
-            @apply flex items-center gap-3 text-white font-bold pl-4 pr-6 py-2.5 rounded-2xl transition-all shadow-lg active:scale-95; 
-            background: var(--ws-accent); 
-            box-shadow: 0 4px 15px -3px var(--ws-accent);
-        }
-        
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #a8a29e; border-radius: 10px; }
-        
-        .bim-node { 
-            @apply transition-all duration-200 border-l-2 border-transparent rounded-r-xl mb-1 cursor-pointer bg-white/40 p-3 flex items-center justify-between text-stone-700; 
-        }
-        .bim-node:hover { @apply bg-white/70; }
-        .bim-node.selected { 
-            @apply bg-white shadow-md border-l-4; 
-            border-left-color: var(--ws-accent); 
-        }
-
-        .database-item { @apply p-3 border-b border-stone-300 hover:bg-stone-100/50 transition-colors cursor-help; }
-
-        /* --- 2D Reference Loading Screen Styles --- */
-        #loader-overlay {
-            position: fixed; inset: 0; z-index: 1000;
-            background: #fcf9f2; /* Cream Base */
-            background-image: radial-gradient(#d6c09b 1px, transparent 1px);
-            background-size: 40px 40px;
-            color: #451a03;
-            display: grid; 
-            grid-template-rows: auto 1fr auto;
-            pointer-events: auto;
-            padding: 3rem;
-            transition: opacity 0.8s ease;
-        }
-
-        .loader-header { display: flex; justify-between; align-items: flex-start; width: 100%; }
-        
-        .terra-logo-block h1 { font-family: 'Anton', sans-serif; letter-spacing: 0.05em; font-size: 3.5rem; line-height: 0.9; color: #451a03; }
-        .terra-logo-block h1 span { color: #d97706; }
-        
-        .color-bars { display: flex; gap: 4px; margin-left: 1rem; height: 2rem; align-items: center; }
-        .bar { width: 12px; height: 100%; transform: skewX(-15deg); }
-
-        .loader-main { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2rem; align-items: center; width: 100%; height: 100%; padding: 2rem 0; }
-        
-        /* Left: Manual Box */
-        .manual-box {
-            border: 2px solid #78350f;
-            border-radius: 1rem;
-            height: 100%;
-            padding: 1.5rem;
-            display: flex; flex-direction: column;
-            background: rgba(255,255,255,0.4);
-            box-shadow: 5px 5px 0px rgba(120, 53, 15, 0.1);
-        }
-
-        /* Center: 2D Framework Animation */
-        .framework-visual {
-            position: relative;
-            width: 100%; height: 100%;
-            max-height: 400px;
-            display: flex; justify-content: center; align-items: center;
-        }
-        
-        .schematic-grid {
-            width: 200px; height: 350px;
-            border: 1px solid rgba(120, 53, 15, 0.3);
-            position: relative;
-        }
-        .schematic-grid::before { content:''; position: absolute; inset:0; background: linear-gradient(90deg, transparent 49%, rgba(120, 53, 15, 0.2) 50%, transparent 51%); }
-        .schematic-grid::after { content:''; position: absolute; inset:0; background: linear-gradient(transparent 49%, rgba(120, 53, 15, 0.2) 50%, transparent 51%); }
-
-        .scan-beam {
-            position: absolute; left: -10%; right: -10%; height: 2px;
-            background: #059669;
-            box-shadow: 0 0 15px #059669;
-            animation: scan-updown 3s ease-in-out infinite alternate;
-        }
-        @keyframes scan-updown { 0% { top: 10%; } 100% { top: 90%; } }
-
-        /* Right: Links */
-        .link-cluster { display: flex; flex-direction: column; gap: 1.5rem; justify-content: center; }
-        .workspace-link {
-            display: flex; align-items: center; gap: 1rem;
-            cursor: pointer; transition: transform 0.2s;
-        }
-        .workspace-link:hover { transform: translateX(10px); }
-        .diamond-icon { width: 24px; height: 24px; transform: rotate(45deg); flex-shrink: 0; }
-        .link-pill {
-            border: 2px solid #78350f;
-            border-radius: 9999px;
-            padding: 0.5rem 1.5rem;
-            font-family: 'Anton', sans-serif;
-            text-transform: uppercase;
-            color: #451a03;
-            background: rgba(255,255,255,0.6);
-            letter-spacing: 0.1em;
-            font-size: 1rem;
-        }
-        
-        .loader-footer { display: flex; justify-content: space-between; align-items: flex-end; width: 100%; }
-
-        .enter-btn-main {
-            background: #78350f; color: #fffefb;
-            padding: 1rem 3rem;
-            border-radius: 9999px;
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.2em;
-            font-size: 0.8rem;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(120, 53, 15, 0.3);
-        }
-        .enter-btn-main:hover { background: #451a03; transform: translateY(-2px); }
-
-        /* Workspace Scan Line */
-        .scan-line { 
-            position: absolute; width: 100%; height: 2px; left: 0; 
-            background: linear-gradient(90deg, transparent, var(--ws-accent), transparent); 
-            box-shadow: 0 0 30px var(--ws-accent); 
-            opacity: 0; z-index: 50; pointer-events: none; 
-        }
-        .scan-active { animation: scan-move 4s cubic-bezier(0.4, 0, 0.2, 1) infinite; opacity: 1; }
-        @keyframes scan-move { 0% { top: 0%; } 50% { top: 100%; } 100% { top: 0%; } }
-
-        .hud-stat { @apply p-4 bg-white/60 rounded-3xl border border-stone-200 backdrop-blur-md; }
-        
-        #drop-zone-overlay {
-            background: rgba(255,255,255, 0.6);
-            backdrop-filter: blur(6px);
-            z-index: 900;
-            border: 2px dashed var(--ws-accent);
-        }
-
-        /* 2D Table Styles */
-        .calc-table { width: 100%; border-collapse: collapse; font-size: 10px; }
-        .calc-table th { text-align: left; padding: 8px; border-bottom: 2px solid rgba(120, 53, 15, 0.1); color: var(--terra-text-muted); font-weight: 800; text-transform: uppercase; }
-        .calc-table td { padding: 8px; border-bottom: 1px solid rgba(120, 53, 15, 0.05); font-family: 'JetBrains Mono', monospace; }
-        .calc-input { background: rgba(255,255,255,0.5); border: 1px solid rgba(0,0,0,0.1); padding: 4px; border-radius: 4px; width: 100%; font-family: 'JetBrains Mono', monospace; }
-
-        /* Custom VR Button Styling Override */
-        #VRButton {
-            background: #78350f !important;
-            border: 2px solid #fff !important;
-            border-radius: 999px !important;
-            font-family: 'Anton', sans-serif !important;
-            letter-spacing: 0.2em !important;
-            font-size: 12px !important;
-            bottom: 20px !important;
-            opacity: 0.9 !important;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
-        }
-
-        /* AI Feed Log */
-        .ai-log-item {
-            @apply border-l-2 border-stone-300 pl-2 py-1 text-[9px] font-mono mb-2 opacity-80 transition-all;
-        }
-        .ai-log-item.risk-high { border-color: #ef4444; color: #991b1b; background: rgba(254, 226, 226, 0.5); }
-        .ai-log-item.risk-med { border-color: #f59e0b; color: #92400e; }
-        .ai-log-item.scan-ok { border-color: #10b981; color: #065f46; }
-
+        #root { height: 100vh; width: 100vw; }
     </style>
 </head>
 <body>
+    <div id="root"></div>
 
-    <!-- REFERENCE-MATCHED LOADING SCREEN -->
-    <div id="loader-overlay">
-        
-        <!-- Header -->
-        <div class="loader-header">
-            <div class="terra-logo-block">
-                <div class="text-[9px] font-bold text-stone-500 uppercase tracking-[0.4em] mb-1">Geology Survey | BIM | AI Simulation</div>
-                <div class="flex items-end">
-                    <h1>TERRA SCAN</h1>
-                    <div class="color-bars mb-3">
-                        <div class="bar bg-emerald-500"></div>
-                        <div class="bar bg-sky-500"></div>
-                        <div class="bar bg-rose-600"></div>
-                        <div class="bar bg-violet-600"></div>
-                    </div>
-                </div>
-                <div class="text-[9px] font-bold text-stone-400 uppercase tracking-[0.2em] mt-1">Professional Infinite Spatial Analysis</div>
-            </div>
+    <!-- Main Application Script -->
+    <script type="text/babel" data-type="module">
+        import React, { useState, useRef, useEffect, useMemo, useCallback, Suspense } from 'react';
+        import { createRoot } from 'react-dom/client';
+        import { Canvas, useThree } from '@react-three/fiber';
+        import { OrbitControls, Grid, Html, useCursor, TransformControls, PerspectiveCamera, Environment, Text } from '@react-three/drei';
+        import { 
+            Box, Layers, PenTool, Trash2, MousePointer, Undo,
+            Settings, Save, ArrowUpCircle, Axis3d, Ruler, 
+            DollarSign, FileText, ScanLine, Upload, Zap, Image as ImageIcon, 
+            FileImage, TrendingUp, Grid3X3, Calculator, PieChart, FileSpreadsheet, Plus, Copy, Eye, EyeOff,
+            ToggleLeft, ToggleRight, LayoutTemplate, Magnet, Info, X, Cpu, Database, Glasses, MonitorSmartphone
+        } from 'lucide-react';
+        import * as THREE from 'three';
+        import { v4 as uuidv4 } from 'uuid';
+        import { motion } from 'framer-motion';
 
-            <div class="text-right">
-                <div class="bg-white/50 border border-stone-300 p-3 rounded-lg text-[9px] font-mono text-stone-600 space-y-1">
-                    <div class="font-bold">SYSTEM STATUS</div>
-                    <div class="flex justify-between gap-4"><span>SYS_CHECK:</span> <span class="text-emerald-600">OK</span></div>
-                    <div class="flex justify-between gap-4"><span>XR_RUNTIME:</span> <span class="text-violet-600 animate-pulse">DETECTING...</span></div>
-                    <div class="flex justify-between gap-4"><span>AI_CORE:</span> <span class="text-emerald-600">ONLINE</span></div>
-                    <div class="flex justify-between gap-4"><span>STATUS:</span> <span class="text-amber-600 animate-pulse">CALIBRATING...</span></div>
-                </div>
-                
-                <div class="mt-2 p-3 bg-stone-100/50 rounded-lg text-[9px] font-bold text-stone-500 text-left">
-                    <div class="mb-1">WORKSPACE USAGE:</div>
-                    <div class="text-emerald-600">SURVEY: Topographic & Lithology</div>
-                    <div class="text-sky-600">DESIGN: BIM Metadata & Setup</div>
-                    <div class="text-rose-600">ANALYZE: FEA Physics & Simulation</div>
-                    <div class="text-violet-600">IMMERSIVE: VR/AR Borehole AI</div>
-                </div>
-            </div>
-        </div>
+        // --- 1. CONFIGURATION ---
 
-        <!-- Main Content Grid -->
-        <div class="loader-main">
-            <!-- Left: Manual -->
-            <div class="manual-box">
-                <h3 class="text-xs font-black uppercase tracking-widest text-stone-800 mb-4">User Manual:</h3>
-                <div class="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4 text-[10px] text-stone-600 font-medium leading-relaxed">
-                    <p>
-                        <strong class="text-stone-900 block mb-1">01. INGESTION PROTOCOL</strong>
-                        Drag and drop .OBJ or .IFC files. The "AI Problemist" engine will auto-scan geometry for geological conflicts.
-                    </p>
-                    <p>
-                        <strong class="text-stone-900 block mb-1">02. IMMERSIVE XR</strong>
-                        Connect VR/AR Headset. Select "IMMERSIVE" tab to engage pass-through geology overlay. Hand tracking enabled for borehole manipulation.
-                    </p>
-                    <p>
-                        <strong class="text-stone-900 block mb-1">03. AI RISK DETECTION</strong>
-                        Real-time boreholes will appear autonomously. Red sectors indicate "Liquefaction Risk" or "Void".
-                    </p>
-                </div>
-            </div>
-
-            <!-- Center: Visual -->
-            <div class="framework-visual">
-                <div class="schematic-grid">
-                    <!-- Diagonal bracing -->
-                    <svg class="absolute inset-0 w-full h-full opacity-10 text-amber-900" viewBox="0 0 100 175" preserveAspectRatio="none">
-                        <line x1="0" y1="0" x2="100" y2="175" stroke="currentColor" stroke-width="0.5"/>
-                        <line x1="100" y1="0" x2="0" y2="175" stroke="currentColor" stroke-width="0.5"/>
-                        <line x1="0" y1="43.75" x2="100" y2="43.75" stroke="currentColor" stroke-width="0.5"/>
-                        <line x1="0" y1="87.5" x2="100" y2="87.5" stroke="currentColor" stroke-width="0.5"/>
-                        <line x1="0" y1="131.25" x2="100" y2="131.25" stroke="currentColor" stroke-width="0.5"/>
-                    </svg>
-                    <div class="scan-beam"></div>
-                </div>
-            </div>
-
-            <!-- Right: Links -->
-            <div class="link-cluster">
-                <h3 class="text-xl font-black uppercase tracking-tighter text-stone-800 mb-2">WORKSPACE:</h3>
-                
-                <div class="workspace-link" onclick="enterDirectly('survey')">
-                    <div class="diamond-icon bg-emerald-500 shadow-md"></div>
-                    <div class="link-pill hover:bg-emerald-50 hover:text-emerald-900 hover:border-emerald-700">Geological Survey</div>
-                </div>
-                
-                <div class="workspace-link" onclick="enterDirectly('design')">
-                    <div class="diamond-icon bg-sky-500 shadow-md"></div>
-                    <div class="link-pill hover:bg-sky-50 hover:text-sky-900 hover:border-sky-700">Building Information Model</div>
-                </div>
-                
-                <div class="workspace-link" onclick="enterDirectly('immersive')">
-                    <div class="diamond-icon bg-violet-600 shadow-md"></div>
-                    <div class="link-pill hover:bg-violet-50 hover:text-violet-900 hover:border-violet-700">VR/AR AI Immersive</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="loader-footer">
-            <div class="text-[9px] font-mono text-stone-400">
-                <p class="font-bold text-stone-600">INTELLIGENT KERNEL V9.0 XR</p>
-                <p>Copyright 2026. TerraScan Spatial Systems.<br>Augmented Reality Enabled.</p>
-            </div>
-            
-            <button onclick="enterDirectly('survey')" class="enter-btn-main">
-                Enter Simulation
-            </button>
-        </div>
-    </div>
-
-    <!-- Main Workspace -->
-    <div id="canvas-container"></div>
-    <div id="main-scan-line" class="scan-line"></div>
-    
-    <div id="drop-zone-overlay" class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-0 transition-opacity duration-300">
-        <div class="bg-white/90 border-2 border-dashed border-cyan-500 p-16 rounded-[3rem] backdrop-blur-md flex flex-col items-center shadow-2xl">
-            <i data-lucide="upload-cloud" class="w-16 h-16 text-cyan-600 mb-6 animate-bounce"></i>
-            <span class="text-cyan-800 font-black uppercase tracking-[0.3em] text-lg">Ingest Spatial Asset</span>
-        </div>
-    </div>
-
-    <div class="ui-overlay absolute inset-0 flex flex-col p-8 pointer-events-none opacity-0" id="main-ui">
-        <!-- Header -->
-        <div class="flex justify-between items-start mb-8">
-            <div class="glass-panel px-8 py-0 rounded-[2rem] flex items-center gap-10 shadow-2xl panel-active-outline">
-                <div class="flex items-center gap-5 py-4">
-                    <div class="w-14 h-14 bg-white/50 rounded-[1.25rem] flex items-center justify-center shadow-lg border border-stone-200">
-                        <i data-lucide="scan-eye" class="w-8 h-8 text-stone-700"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-lg font-black tracking-tighter leading-none text-stone-800 uppercase terra-font">TERRA <span class="text-stone-500">SCAN</span></h1>
-                        <span class="text-[10px] text-accent uppercase font-black tracking-[0.3em]">AI Problemist Geology</span>
-                    </div>
-                </div>
-                <div class="h-12 w-px bg-stone-300"></div>
-                <nav class="flex h-full items-end">
-                    <button onclick="switchWorkspace('schematic')" id="ws-schematic" class="workspace-btn"><i data-lucide="ruler" class="w-4 h-4"></i>2D Schematic</button>
-                    <div class="w-px h-6 bg-stone-300 mx-2"></div>
-                    <button onclick="switchWorkspace('survey')" id="ws-survey" class="workspace-btn active"><i data-lucide="compass" class="w-4 h-4"></i>3D Survey</button>
-                    <button onclick="switchWorkspace('design')" id="ws-design" class="workspace-btn"><i data-lucide="layers-2" class="w-4 h-4"></i>3D Design</button>
-                    <button onclick="switchWorkspace('analysis')" id="ws-analysis" class="workspace-btn"><i data-lucide="cpu" class="w-4 h-4"></i>3D Analysis</button>
-                    <button onclick="switchWorkspace('immersive')" id="ws-immersive" class="workspace-btn"><i data-lucide="glasses" class="w-4 h-4"></i>XR Immersive</button>
-                </nav>
-            </div>
-
-            <div class="glass-panel p-2.5 rounded-[2.25rem] flex items-center gap-4 shadow-xl">
-                <div class="flex flex-col items-end px-4">
-                    <div class="flex items-center gap-2">
-                        <div class="w-2.5 h-2.5 rounded-full bg-accent animate-pulse shadow-[0_0_8px_var(--ws-accent)]"></div>
-                        <span class="text-[8px] font-black text-stone-700 uppercase tracking-widest">Active Shell</span>
-                    </div>
-                    <span id="active-discipline-label" class="text-[7px] font-bold uppercase tracking-widest text-accent">Geology</span>
-                </div>
-                <button onclick="triggerImport()" class="ingest-btn" title="Ingest Spatial Model">
-                    <i data-lucide="file-up" class="w-5 h-5"></i>
-                    <span class="text-[10px] font-black uppercase">Ingest</span>
-                </button>
-                <div class="h-8 w-px bg-stone-300"></div>
-                <button onclick="exportProjectAudit()" class="bg-white/80 text-stone-700 border border-stone-300 px-6 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-stone-50 transition flex items-center gap-2 shadow-lg tooltip" data-tip="Export Project Audit">
-                    <i data-lucide="file-text" class="w-4 h-4"></i> Export
-                </button>
-                <input type="file" id="file-input" class="hidden" onchange="handleFileSelect(event)">
-            </div>
-        </div>
-
-        <!-- Operative Core -->
-        <div class="flex-1 flex gap-8 overflow-hidden">
-            <!-- Left Panel: Entities & Hierarchy -->
-            <div class="w-80 flex flex-col gap-8 ui-layout-col">
-                <div id="panel-entities" class="glass-panel p-8 rounded-[3.5rem] shadow-sm flex flex-col max-h-[60%] panel-active-outline">
-                    <div class="flex justify-between items-center mb-8">
-                        <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-600">Project Entities</h2>
-                        <div class="flex gap-2">
-                             <button onclick="undoAction()" class="text-stone-400 hover:text-stone-900 transition tooltip" data-tip="Undo"><i data-lucide="rotate-ccw" class="w-4 h-4"></i></button>
-                             <button onclick="clearEntities()" class="text-stone-400 hover:text-rose-500 transition tooltip" data-tip="Purge"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                        </div>
-                    </div>
-                    <div id="bim-tree" class="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-2"></div>
-                </div>
-
-                <div id="panel-inspector" class="glass-panel p-8 rounded-[3.5rem] flex-1 flex flex-col shadow-sm overflow-hidden panel-active-outline">
-                    <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-600 mb-6 text-center">Attributes</h2>
-                    <div id="property-panel" class="flex-1 overflow-y-auto pr-2 custom-scrollbar"></div>
-                </div>
-            </div>
-
-            <!-- Main HUD (Bottom Center) -->
-            <div class="flex-1 relative ui-layout-col">
-                <div class="absolute bottom-12 left-1/2 -translate-x-1/2 glass-panel p-4 rounded-[3.5rem] flex items-center gap-8 shadow-2xl border-stone-300 panel-active-outline bg-white/30">
-                    <div class="flex gap-3">
-                        <button onclick="setCameraMode('persp')" id="btn-cam-persp" class="control-btn active tooltip" data-tip="3D Perspective"><i data-lucide="box" class="w-5 h-5"></i></button>
-                        <button onclick="setCameraMode('ortho')" id="btn-cam-ortho" class="control-btn tooltip" data-tip="2D Schematic (Ortho)"><i data-lucide="layout-template" class="w-5 h-5"></i></button>
-                    </div>
-                    <div class="h-10 w-px bg-stone-300"></div>
-                    <div class="flex gap-3">
-                        <button onclick="setCameraView('top')" class="control-btn tooltip" data-tip="Plan View"><i data-lucide="layout-grid" class="w-5 h-5"></i></button>
-                        <button onclick="setCameraView('front')" class="control-btn tooltip" data-tip="Elevation"><i data-lucide="columns" class="w-5 h-5"></i></button>
-                        <button onclick="setCameraView('iso')" class="control-btn tooltip" data-tip="Isometric"><i data-lucide="maximize" class="w-5 h-5"></i></button>
-                    </div>
-                    <div class="h-10 w-px bg-stone-300"></div>
-                    <div class="flex gap-3">
-                        <button onclick="toggleGrid()" id="btn-grid" class="control-btn active tooltip" data-tip="Grid"><i data-lucide="grid-3x3" class="w-5 h-5"></i></button>
-                        <button onclick="toggleSection()" id="btn-section" class="control-btn tooltip" data-tip="Section Plane"><i data-lucide="slice" class="w-5 h-5"></i></button>
-                        <button onclick="toggleXray()" id="btn-xray" class="control-btn tooltip" data-tip="X-Ray"><i data-lucide="scan-line" class="w-5 h-5"></i></button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Panel: Controls & Library -->
-            <div class="w-80 flex flex-col gap-8 ui-layout-col">
-                <div id="panel-context-controls" class="glass-panel p-8 rounded-[3.5rem] shadow-sm panel-active-outline">
-                    
-                    <!-- 2D Schematic Controls -->
-                    <div id="schematic-controls" class="space-y-8 hidden">
-                        <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-600">Stress Logic</h2>
-                        <div class="bg-white/40 p-4 rounded-3xl border border-stone-200">
-                            <table class="calc-table w-full mb-3">
-                                <thead><tr><th>Load (kN)</th><th>Area (m²)</th><th>σ (MPa)</th></tr></thead>
-                                <tbody id="stress-table-body"></tbody>
-                            </table>
-                            <div class="flex gap-2">
-                                <input id="inp-load" type="number" placeholder="Load" class="calc-input">
-                                <input id="inp-area" type="number" placeholder="Area" class="calc-input">
-                            </div>
-                            <button onclick="addStressPoint()" class="mt-2 w-full bg-slate-700 text-white py-2 rounded-xl text-[9px] font-bold uppercase tracking-widest hover:bg-slate-800 transition shadow-lg">Add Node</button>
-                        </div>
-                    </div>
-
-                    <!-- Geology Controls -->
-                    <div id="survey-controls" class="space-y-8">
-                        <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-600">Borehole Control</h2>
-                        <div class="space-y-6">
-                            <div class="space-y-3">
-                                <div class="flex justify-between text-[11px] font-black text-stone-500 uppercase tracking-tighter">
-                                    <span>Depth Scan</span>
-                                    <span id="val-strata" class="metric-value text-accent font-black">0.0m</span>
-                                </div>
-                                <input type="range" class="w-full h-2.5 bg-stone-300 rounded-full appearance-none accent-emerald-500 cursor-pointer" min="0" max="40" step="1" value="0" oninput="updateBoreholeSection(this.value)">
-                            </div>
-                            <div class="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
-                                <span class="text-[9px] font-black uppercase text-emerald-800 tracking-widest block mb-2">AI Problemist Engine</span>
-                                <div class="text-[10px] text-emerald-600 leading-tight">System is passively scanning for sub-surface anomalies. Immersive mode required for full visualization.</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Analysis Controls -->
-                    <div id="analysis-controls" class="space-y-8 hidden">
-                        <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-600">Structural Solve</h2>
-                        <button onclick="runFEA()" id="btn-fea-solve" class="w-full text-white py-6 rounded-[2rem] text-[10px] font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3 shadow-2xl transition-all bg-accent hover:brightness-110">
-                            <i data-lucide="zap" class="w-5 h-5"></i> Run FEA Mesh
-                        </button>
-                        <div class="hud-stat mt-4">
-                            <span class="text-[9px] font-black text-stone-400 uppercase tracking-widest block mb-2">Max Stress</span>
-                            <span id="val-stress" class="metric-value text-3xl text-stone-900 font-black">0.00 <span class="text-sm text-stone-400">MPa</span></span>
-                        </div>
-                    </div>
-
-                    <!-- Immersive XR AI Controls -->
-                    <div id="immersive-controls" class="space-y-8 hidden">
-                        <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-600">AI Geology Stream</h2>
-                        
-                        <div class="bg-black/80 p-4 rounded-3xl border border-violet-500/30 text-white min-h-[200px] flex flex-col">
-                            <div class="flex justify-between items-center mb-2 border-b border-white/20 pb-2">
-                                <span class="text-[9px] font-mono text-violet-300 animate-pulse">LIVE FEED // PROBLEMIST_AI</span>
-                                <i data-lucide="activity" class="w-3 h-3 text-violet-400"></i>
-                            </div>
-                            <div id="ai-log-feed" class="flex-1 overflow-y-auto custom-scrollbar h-48 space-y-1">
-                                <!-- Dynamic Logs -->
-                            </div>
-                        </div>
-
-                        <div class="flex gap-2">
-                            <div class="flex-1 p-3 bg-white/60 rounded-2xl text-center">
-                                <span class="block text-[8px] uppercase tracking-widest text-stone-500">Anomalies</span>
-                                <span id="anomaly-count" class="text-xl font-black text-violet-600">0</span>
-                            </div>
-                            <div class="flex-1 p-3 bg-white/60 rounded-2xl text-center">
-                                <span class="block text-[8px] uppercase tracking-widest text-stone-500">Risk Factor</span>
-                                <span id="risk-factor" class="text-xl font-black text-rose-600">LOW</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Reference Library Database -->
-                <div class="glass-panel p-8 rounded-[3.5rem] flex-1 flex flex-col shadow-sm overflow-hidden panel-active-outline">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-600">Library</h2>
-                        <i data-lucide="book-open" class="w-4 h-4 text-stone-400"></i>
-                    </div>
-                    <div class="mb-4">
-                        <input type="text" id="lib-search" oninput="searchDatabase(this.value)" placeholder="Search Standards (e.g. ASTM)..." class="w-full bg-white/50 border border-stone-300 rounded-xl p-3 text-[10px] font-bold outline-none focus:border-stone-500 text-stone-800 placeholder-stone-400">
-                    </div>
-                    <div id="db-content" class="flex-1 overflow-y-auto pr-2 custom-scrollbar text-[10px] font-medium space-y-1 text-stone-500">
-                        <!-- DB Items -->
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="mt-8 flex justify-between items-center text-[10px] text-stone-400 font-mono font-bold tracking-[0.3em] uppercase pt-6 border-t border-stone-300">
-            <span id="coord-display">REF_COORDS: [00.00, 00.00, 0.00]</span>
-            <span class="text-accent">BUILD 9.0 XR_ENABLED</span>
-        </div>
-    </div>
-
-    <a id="download-link" style="display:none"></a>
-
-    <script>
-        let scene, renderer, controls, terrain, bimModel, globalSectionPlane, boreholePlane, gridHelper;
-        // Cameras: Two distinct cameras for 3D/2D switching
-        let cameraPersp, cameraOrtho, currentCamera;
-        let activeWorkspace = 'survey', isSolving = false, selectedEntityId = null;
-        let sectionActive = false, xrayActive = false;
-        let actionStack = [], activityLedger = [], stressPoints = [];
-        
-        // AI Geology Variables
-        let aiBoreholes = [];
-        let aiScanInterval;
-        let anomaliesDetected = 0;
-
-        // Faded / Sun-bleached Hues
-        const DISCIPLINE_COLORS = { 
-            schematic: '#475569', 
-            survey: '#059669', 
-            design: '#0284c7', 
-            analysis: '#be123c',
-            immersive: '#7c3aed' 
+        const THEME = {
+            primary: '#3b82f6', 
+            accent: '#f59e0b',
+            grid: '#94a3b8',
         };
 
-        const STANDARDS_DB = [
-            { code: "ASTM D2487", field: "Geology", desc: "Classification of Soils for Engineering Purposes." },
-            { code: "ACI 318-19", field: "Structural", desc: "Building Code Requirements for Structural Concrete." },
-            { code: "AISC 360", field: "Structural", desc: "Specification for Structural Steel Buildings." },
-            { code: "ASCE 7", field: "Civil", desc: "Minimum Design Loads and Associated Criteria." },
-            { code: "ASTM D1586", field: "Geology", desc: "Standard Penetration Test (SPT) Method." },
-            { code: "EN 1992", field: "Structural", desc: "Eurocode 2: Design of concrete structures." },
-            { code: "ASTM C39", field: "Analysis", desc: "Compressive Strength of Cylindrical Concrete." }
-        ];
-
-        // INLINE VR BUTTON (Fixes ReferenceError)
-        const VRButton = {
-            createButton: function ( renderer ) {
-                const button = document.createElement( 'button' );
-
-                function showEnterVR( /*device*/ ) {
-                    let currentSession = null;
-                    async function onSessionStarted( session ) {
-                        session.addEventListener( 'end', onSessionEnded );
-                        await renderer.xr.setSession( session );
-                        button.textContent = 'EXIT XR';
-                        currentSession = session;
-                    }
-
-                    function onSessionEnded( /*event*/ ) {
-                        currentSession.removeEventListener( 'end', onSessionEnded );
-                        button.textContent = 'ENTER XR';
-                        currentSession = null;
-                    }
-
-                    button.style.display = '';
-                    button.style.cursor = 'pointer';
-                    button.style.left = 'calc(50% - 50px)';
-                    button.style.width = '100px';
-                    button.textContent = 'ENTER XR';
-
-                    button.onmouseenter = function () { button.style.opacity = '1.0'; };
-                    button.onmouseleave = function () { button.style.opacity = '0.5'; };
-
-                    button.onclick = function () {
-                        if ( currentSession === null ) {
-                            const sessionInit = { optionalFeatures: [ 'local-floor', 'bounded-floor', 'hand-tracking', 'layers' ] };
-                            navigator.xr.requestSession( 'immersive-vr', sessionInit ).then( onSessionStarted );
-                        } else {
-                            currentSession.end();
-                        }
-                    };
-                }
-
-                function disableButton() {
-                    button.style.display = '';
-                    button.style.cursor = 'auto';
-                    button.style.left = 'calc(50% - 75px)';
-                    button.style.width = '150px';
-                    button.textContent = 'VR UNSUPPORTED';
-                    button.onclick = null;
-                }
-
-                function showWebXRNotFound() {
-                    disableButton();
-                }
-
-                function stylizeElement( element ) {
-                    element.style.position = 'absolute';
-                    element.style.bottom = '20px';
-                    element.style.padding = '12px 6px';
-                    element.style.border = '1px solid #fff';
-                    element.style.borderRadius = '4px';
-                    element.style.background = 'rgba(0,0,0,0.1)';
-                    element.style.color = '#fff';
-                    element.style.font = 'normal 13px sans-serif';
-                    element.style.textAlign = 'center';
-                    element.style.opacity = '0.5';
-                    element.style.outline = 'none';
-                    element.style.zIndex = '999';
-                }
-
-                if ( 'xr' in navigator ) {
-                    button.id = 'VRButton';
-                    button.style.display = 'none';
-                    stylizeElement( button );
-                    navigator.xr.isSessionSupported( 'immersive-vr' ).then( function ( supported ) {
-                        supported ? showEnterVR() : showWebXRNotFound();
-                    } );
-                    document.body.appendChild( button );
-                    return button;
-                } else {
-                    const message = document.createElement( 'a' );
-                    if ( window.isSecureContext === false ) {
-                        message.href = document.location.href.replace( /^http:/, 'https:' );
-                        message.innerHTML = 'WEBXR NEEDS HTTPS'; 
-                    } else {
-                        message.href = 'https://immersiveweb.dev/';
-                        message.innerHTML = 'WEBXR NOT AVAILABLE';
-                    }
-                    message.style.left = 'calc(50% - 90px)';
-                    message.style.width = '180px';
-                    message.style.textDecoration = 'none';
-                    stylizeElement( message );
-                    return message;
-                }
-            }
+        const INITIAL_MATERIALS = {
+            'CONCRETE_C25': { id: 'MAT-01', name: 'Concrete C25', cost: 120, unit: 'm³' },
+            'STEEL_S355':   { id: 'MAT-02', name: 'Steel S355', cost: 2400, unit: 'ton' },
+            'GLASS_DBL':    { id: 'MAT-03', name: 'Glazing Dbl', cost: 450, unit: 'm²' },
+            'COMPOSITE':    { id: 'MAT-04', name: 'Comp Panel', cost: 85, unit: 'm²' },
+            'FURNITURE':    { id: 'MAT-05', name: 'Furnishing', cost: 500, unit: 'item' },
         };
 
-        function init() {
-            // Lighter Scene Background (Desert Haze)
-            scene = new THREE.Scene(); 
-            scene.background = new THREE.Color(0xe6dcb5); 
-            scene.fog = new THREE.FogExp2(0xe6dcb5, 0.0006); 
-            
-            // 1. Setup Perspective Camera (3D)
-            cameraPersp = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.5, 100000);
-            cameraPersp.position.set(350, 300, 350);
+        const IFC_MAPPING = {
+            WALL: { type: 'IFCWALL', prefix: 'WAL', material: 'CONCRETE_C25' },
+            COLUMN: { type: 'IFCCOLUMN', prefix: 'COL', material: 'STEEL_S355' },
+            FURNITURE: { type: 'IFCFURNISHING', prefix: 'FUR', material: 'FURNITURE' },
+            SLAB: { type: 'IFCSLAB', prefix: 'SLB', material: 'CONCRETE_C25' }
+        };
 
-            // 2. Setup Orthographic Camera (2D Schematic)
-            const aspect = window.innerWidth / window.innerHeight;
-            const frustumSize = 1000;
-            cameraOrtho = new THREE.OrthographicCamera(frustumSize * aspect / -2, frustumSize * aspect / 2, frustumSize / 2, frustumSize / -2, 1, 100000);
-            cameraOrtho.position.set(0, 1000, 0); // Top down default
-            cameraOrtho.lookAt(0,0,0);
+        const LAYER_DEFS = {
+            'IFCWALL': { label: 'WALLS', icon: Box, color: '#64748b' },
+            'IFCCOLUMN': { label: 'STRUCTURE', icon: Grid3X3, color: '#f59e0b' },
+            'IFCSLAB': { label: 'SLABS', icon: Layers, color: '#475569' },
+            'IFCFURNISHING': { label: 'FURNITURE', icon: LayoutTemplate, color: '#8b5cf6' }
+        };
 
-            currentCamera = cameraPersp; // Default to 3D
+        const GRID_SIZE = 10;
 
-            renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            renderer.shadowMap.enabled = true;
-            renderer.localClippingEnabled = true;
-            
-            // XR ENABLED
-            renderer.xr.enabled = true;
-            document.body.appendChild( VRButton.createButton( renderer ) );
+        // --- 2. ENGINE COMPONENTS ---
 
-            document.getElementById('canvas-container').appendChild(renderer.domElement);
-            
-            // Init controls with current camera
-            controls = new THREE.OrbitControls(currentCamera, renderer.domElement);
-            controls.enableDamping = true;
-            controls.dampingFactor = 0.05;
-            controls.screenSpacePanning = true; 
+        // ANIMATED TRAX LOGO
+        const TraxLogo = () => (
+            <svg width="24" height="24" viewBox="0 0 24 24" className="overflow-visible">
+                <defs>
+                    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#3b82f6" />
+                        <stop offset="100%" stopColor="#8b5cf6" />
+                    </linearGradient>
+                </defs>
+                {/* Grid Lines */}
+                <line x1="0" y1="22" x2="24" y2="22" stroke="#cbd5e1" strokeWidth="1" />
+                <line x1="2" y1="24" x2="2" y2="10" stroke="#cbd5e1" strokeWidth="1" />
+                
+                {/* Animated Riser */}
+                <motion.path
+                    d="M2 20 L8 16 L14 18 L22 4"
+                    fill="none"
+                    stroke="url(#logoGradient)"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    initial={{ pathLength: 0, opacity: 0 }}
+                    animate={{ pathLength: 1, opacity: 1 }}
+                    transition={{ 
+                        duration: 1.5, 
+                        ease: "circOut",
+                        repeat: Infinity,
+                        repeatDelay: 3
+                    }}
+                />
+                <circle cx="22" cy="4" r="2" fill="#3b82f6" />
+            </svg>
+        );
 
-            // High-Visibility Lighting Rig
-            scene.add(new THREE.AmbientLight(0xffffff, 0.8)); // Brighter Ambient
-            const sun = new THREE.DirectionalLight(0xffffff, 1.2); 
-            sun.position.set(500, 1500, 500);
-            sun.castShadow = true; 
-            scene.add(sun);
-            
-            const fillLight = new THREE.DirectionalLight(0xffedd5, 0.6);
-            fillLight.position.set(-500, 200, -500);
-            scene.add(fillLight);
+        // TOOLTIP COMPONENT (White Glass)
+        const Tooltip = ({ text, children }) => (
+            <div className="relative group flex flex-col items-center justify-center">
+                {children}
+                <div className="absolute top-full mt-3 px-3 py-2 bg-white/90 border border-slate-200/50 rounded-lg text-[10px] font-bold tracking-wide text-slate-700 opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none whitespace-nowrap z-[100] shadow-xl backdrop-blur-md translate-y-1 group-hover:translate-y-0">
+                    <div className="tooltip-arrow"></div>
+                    {text}
+                </div>
+            </div>
+        );
 
-            globalSectionPlane = new THREE.Plane(new THREE.Vector3(1, 0, 0), 10000); 
-            boreholePlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 10000);   
+        const BimElement = React.memo(({ element, isSelected, onSelect, mode, onTransformEnd, setOrbitEnabled, materialDb, isGhosted, snap }) => {
+            const [hovered, setHover] = useState(false);
+            const meshRef = useRef();
+            useCursor(hovered, 'pointer', 'auto');
 
-            createTopography();
-            bimModel = new THREE.Group(); scene.add(bimModel);
-            addBIMComponent('MASTER_FOUNDATION_NODE', 'IfcSlab', 'Concrete_C40_Structural', new THREE.Vector3(0, 12, 0), new THREE.Vector3(160, 6, 100), true);
+            const dims = useMemo(() => {
+                const p = element.params;
+                if (element.type === 'IFCWALL') return [Math.max(0.1, p.length), Math.max(0.1, p.height), Math.max(0.05, p.thickness)];
+                if (element.type === 'IFCSLAB') return [Math.max(1, p.width), 0.2, Math.max(1, p.depth)];
+                return [Math.max(0.1, p.width), Math.max(0.1, p.height), Math.max(0.1, p.depth)];
+            }, [element.params, element.type]);
 
-            setupHandlers();
-            setupDragAndDrop();
-            searchDatabase(""); 
-            
-            // Switch to XR Animation Loop
-            renderer.setAnimationLoop(render);
+            const showGizmo = isSelected && ['translate', 'rotate'].includes(mode);
+            const opacity = isGhosted ? 0.1 : (isSelected ? 0.9 : 0.8);
+            const color = isSelected ? THEME.accent : element.color;
+            const meshPos = [0, dims[1]/2, 0]; 
 
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-            
-            logActivity("Infinite Kernel Initialized", "BOOT_READY");
-            startAIScan();
-        }
+            return (
+                <group position={element.position} rotation={element.rotation}>
+                    <group
+                        ref={meshRef}
+                        onClick={(e) => { e.stopPropagation(); onSelect(element.id); }}
+                        onPointerOver={() => setHover(true)}
+                        onPointerOut={() => setHover(false)}
+                    >
+                        <mesh castShadow={!isGhosted} receiveShadow position={meshPos}>
+                            <boxGeometry args={dims} />
+                            <meshStandardMaterial 
+                                color={color}
+                                roughness={0.4} 
+                                metalness={0.2}
+                                transparent={true}
+                                opacity={opacity}
+                                depthWrite={!isGhosted}
+                            />
+                            <lineSegments>
+                                <edgesGeometry args={[new THREE.BoxGeometry(...dims)]} />
+                                <lineBasicMaterial color={isSelected ? '#ffffff' : '#334155'} linewidth={1} transparent opacity={isGhosted ? 0.05 : 0.3} />
+                            </lineSegments>
+                        </mesh>
+                    </group>
 
-        // --- XR Render Loop ---
-        function render() {
-            if (controls) controls.update();
-            // Pulse AI boreholes
-            aiBoreholes.forEach(b => {
-                if(b.active) {
-                    b.mesh.scale.y = THREE.MathUtils.lerp(b.mesh.scale.y, 1, 0.1);
-                    if(b.alertMesh) b.alertMesh.rotation.y += 0.05;
-                    if(b.mesh.scale.y > 0.99) b.active = false;
-                }
-            });
-
-            if(renderer && scene && currentCamera) renderer.render(scene, currentCamera);
-        }
-
-        // --- Loader Logic ---
-        function enterDirectly(mode) {
-            switchWorkspace(mode);
-            dismissLoader();
-        }
-
-        function dismissLoader() {
-            document.getElementById('loader-overlay').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('loader-overlay').style.display = 'none';
-                const mainUi = document.getElementById('main-ui');
-                if(mainUi) { mainUi.classList.remove('pointer-events-none'); mainUi.style.opacity = '1'; }
-            }, 800);
-        }
-
-        // --- Workspace Logic ---
-        function switchWorkspace(ws) {
-            activeWorkspace = ws;
-            const accent = DISCIPLINE_COLORS[ws];
-            document.documentElement.style.setProperty('--ws-accent', accent);
-            
-            const labels = { 
-                schematic: '2D Logic', 
-                survey: 'Geology', 
-                design: 'Structural', 
-                analysis: 'Civil Physics', 
-                immersive: 'XR AI Geology' 
-            };
-            const labelEl = document.getElementById('active-discipline-label');
-            if(labelEl) labelEl.innerText = labels[ws];
-
-            ['schematic', 'survey', 'design', 'analysis', 'immersive'].forEach(m => {
-                const btn = document.getElementById(`ws-${m}`);
-                if(btn) btn.classList.toggle('active', m === ws);
-            });
-            
-            document.getElementById('schematic-controls').classList.toggle('hidden', ws !== 'schematic');
-            document.getElementById('survey-controls').classList.toggle('hidden', ws !== 'survey');
-            document.getElementById('analysis-controls').classList.toggle('hidden', ws !== 'analysis');
-            document.getElementById('immersive-controls').classList.toggle('hidden', ws !== 'immersive');
-
-            if (ws === 'schematic') {
-                setCameraMode('ortho');
-                if(terrain && terrain.material) { terrain.material.wireframe = true; terrain.material.color.setHex(0xe2e8f0); }
-                setCameraView('top'); 
-            } else {
-                setCameraMode('persp');
-                // Immersive mode darkens terrain for hologram effect
-                if (ws === 'immersive') {
-                    if(terrain && terrain.material) { terrain.material.wireframe = true; terrain.material.color.setHex(0x2e1065); }
-                    scene.background = new THREE.Color(0x0f0518);
-                    scene.fog = new THREE.FogExp2(0x0f0518, 0.002); 
-                } else {
-                    if(terrain && terrain.material) { terrain.material.wireframe = (ws === 'survey'); terrain.material.color.setHex(0x334155); }
-                    scene.background = new THREE.Color(0xe6dcb5);
-                    scene.fog = new THREE.FogExp2(0xe6dcb5, 0.0006); 
-                }
-            }
-            if (bimModel) bimModel.visible = true; 
-            updateTree();
-        }
-
-        // --- AI Problemist Engine ---
-        function startAIScan() {
-            if(aiScanInterval) clearInterval(aiScanInterval);
-            aiScanInterval = setInterval(() => {
-                if(activeWorkspace === 'immersive' && Math.random() > 0.6) {
-                    generateBoreholeAnomaly();
-                }
-            }, 2000);
-        }
-
-        function generateBoreholeAnomaly() {
-            const x = (Math.random() - 0.5) * 400;
-            const z = (Math.random() - 0.5) * 400;
-            const depth = 20 + Math.random() * 40;
-            
-            // Determine Risk
-            const riskRoll = Math.random();
-            let color = 0x059669; // Green (Safe)
-            let type = "Lithology Scan";
-            let riskClass = "scan-ok";
-            let alertMesh = null;
-
-            if (riskRoll > 0.85) {
-                color = 0xff0000; type = "CRITICAL: Liquefaction Void"; riskClass = "risk-high";
-                anomaliesDetected++;
-            } else if (riskRoll > 0.6) {
-                color = 0xf59e0b; type = "WARN: Soft Clay Pocket"; riskClass = "risk-med";
-            }
-
-            // Create Visuals
-            const geometry = new THREE.CylinderGeometry(1, 1, depth, 8);
-            geometry.translate(0, -depth/2, 0);
-            const material = new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.6, wireframe: true });
-            const cylinder = new THREE.Mesh(geometry, material);
-            cylinder.position.set(x, 0, z);
-            cylinder.scale.y = 0.01; // Start small for animation
-
-            // Add alert marker if risky
-            if (riskClass !== "scan-ok") {
-                const sphereGeo = new THREE.SphereGeometry(3, 8, 8);
-                const sphereMat = new THREE.MeshBasicMaterial({ color: color, wireframe: true });
-                alertMesh = new THREE.Mesh(sphereGeo, sphereMat);
-                alertMesh.position.set(0, 5, 0);
-                cylinder.add(alertMesh);
-            }
-
-            scene.add(cylinder);
-            aiBoreholes.push({ mesh: cylinder, active: true, alertMesh: alertMesh });
-            if(aiBoreholes.length > 20) {
-                const old = aiBoreholes.shift();
-                scene.remove(old.mesh);
-            }
-
-            // Log to Feed
-            const logFeed = document.getElementById('ai-log-feed');
-            const entry = document.createElement('div');
-            entry.className = `ai-log-item ${riskClass}`;
-            entry.innerHTML = `<div>${type}</div><div class="text-[7px]">COORD: ${x.toFixed(0)}, ${z.toFixed(0)} | DEPTH: -${depth.toFixed(1)}m</div>`;
-            logFeed.prepend(entry);
-
-            // Update Stats
-            document.getElementById('anomaly-count').innerText = anomaliesDetected;
-            document.getElementById('risk-factor').innerText = anomaliesDetected > 5 ? "CRITICAL" : (anomaliesDetected > 2 ? "MODERATE" : "LOW");
-        }
-
-        function setCameraMode(mode) {
-            const oldTarget = controls.target.clone();
-            if (mode === 'ortho') {
-                currentCamera = cameraOrtho;
-                currentCamera.position.set(0, 1000, 0); currentCamera.lookAt(0,0,0); currentCamera.zoom = 1; currentCamera.updateProjectionMatrix();
-                controls.object = currentCamera; controls.enableRotate = false; controls.target.set(0,0,0);
-            } else {
-                currentCamera = cameraPersp;
-                currentCamera.position.set(350, 300, 350);
-                controls.object = currentCamera; controls.enableRotate = true; controls.target.copy(oldTarget);
-            }
-            controls.update();
-        }
-
-        function setCameraView(v) {
-            if (!currentCamera || !controls) return;
-            const dist = currentCamera === cameraOrtho ? 1000 : 800;
-            if(v === 'iso') { 
-                if(currentCamera === cameraOrtho) { currentCamera.position.set(0, 1000, 0); currentCamera.zoom = 1; currentCamera.updateProjectionMatrix(); } 
-                else { currentCamera.position.set(350, 300, 350); }
-                controls.target.set(0, 0, 0); 
-            }
-            if(v === 'top') { currentCamera.position.set(0, dist, 0); controls.target.set(0, 0, 0); }
-            if(v === 'front') { currentCamera.position.set(0, 0, dist); controls.target.set(0, 0, 0); }
-            controls.update();
-        }
-
-        // --- Stress Framework Table Logic ---
-        function addStressPoint() {
-            const lInput = document.getElementById('inp-load');
-            const aInput = document.getElementById('inp-area');
-            const load = parseFloat(lInput.value);
-            const area = parseFloat(aInput.value);
-
-            if (isNaN(load) || isNaN(area) || area === 0) {
-                log("Invalid Calc Data.", "alert-triangle");
-                return;
-            }
-
-            const stress = (load / area).toFixed(2); 
-            
-            const markerGeo = new THREE.SphereGeometry(4, 16, 16);
-            const markerMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-            const marker = new THREE.Mesh(markerGeo, markerMat);
-            marker.position.set((Math.random()-0.5)*50, 16, (Math.random()-0.5)*50); 
-            scene.add(marker);
-            
-            const data = { id: stressPoints.length+1, load, area, stress, mesh: marker };
-            stressPoints.push(data);
-
-            const tbody = document.getElementById('stress-table-body');
-            const row = document.createElement('tr');
-            row.innerHTML = `<td>${load}</td><td>${area}</td><td class="font-bold text-rose-600">${stress}</td>`;
-            tbody.appendChild(row);
-
-            logActivity(`Calculation Node Added: ${stress} MPa`, "plus-circle");
-            lInput.value = ''; aInput.value = '';
-        }
-
-        // --- Drag & Drop Engine ---
-        function setupDragAndDrop() {
-            const dropZone = document.getElementById('drop-zone-overlay');
-            window.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.opacity = '1'; dropZone.classList.remove('pointer-events-none'); });
-            window.addEventListener('dragleave', (e) => { e.preventDefault(); if(e.relatedTarget === null) { dropZone.style.opacity = '0'; dropZone.classList.add('pointer-events-none'); } });
-            window.addEventListener('drop', (e) => { e.preventDefault(); dropZone.style.opacity = '0'; dropZone.classList.add('pointer-events-none'); const files = e.dataTransfer.files; if(files.length) handleDroppedFiles(files); });
-        }
-        function handleDroppedFiles(files) {
-            Array.from(files).forEach(file => {
-                logActivity(`Ingesting Dropped File: ${file.name}`, "upload-cloud");
-                const reader = new FileReader();
-                reader.onload = (ev) => { 
-                    if (file.name.toLowerCase().endsWith('.obj')) parseOBJ(ev.target.result, file.name); 
-                    else if (file.name.toLowerCase().endsWith('.ifc')) parseIFC(ev.target.result, file.name);
-                };
-                reader.readAsText(file);
-            });
-        }
-
-        // --- Database Searching ---
-        function searchDatabase(query) {
-            const container = document.getElementById('db-content');
-            if (!container) return;
-            container.innerHTML = '';
-            
-            const q = query.toLowerCase();
-            const filtered = STANDARDS_DB.filter(s => 
-                s.code.toLowerCase().includes(q) || 
-                s.desc.toLowerCase().includes(q) ||
-                s.field.toLowerCase().includes(q)
+                    {showGizmo && meshRef.current && (
+                        <TransformControls 
+                            object={meshRef.current.parent} 
+                            mode={mode === 'rotate' ? 'rotate' : 'translate'} 
+                            size={0.8}
+                            translationSnap={snap ? 0.5 : null}
+                            rotationSnap={snap ? Math.PI / 4 : null}
+                            onMouseDown={() => setOrbitEnabled(false)}
+                            onMouseUp={(e) => { 
+                                setOrbitEnabled(true);
+                                if (e?.target?.object) setTimeout(() => onTransformEnd(element.id, e.target.object), 0);
+                            }}
+                        />
+                    )}
+                </group>
             );
-            
-            filtered.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'database-item';
-                
-                let tagColor = 'bg-stone-200 text-stone-600';
-                if(item.field === 'Geology') tagColor = 'bg-emerald-100 text-emerald-800';
-                if(item.field === 'Structural') tagColor = 'bg-cyan-100 text-cyan-800';
-                if(item.field === 'Analysis') tagColor = 'bg-rose-100 text-rose-800';
-                
-                div.innerHTML = `
-                    <div class="flex justify-between mb-1">
-                        <span class="font-black text-stone-800">${item.code}</span>
-                        <span class="text-[8px] uppercase px-1.5 py-0.5 rounded-full ${tagColor}">${item.field}</span>
-                    </div>
-                    <div class="text-stone-500 leading-tight">${item.desc}</div>
-                `;
-                container.appendChild(div);
-            });
-            
-            if(filtered.length === 0) {
-                container.innerHTML = `<div class="p-4 text-center text-stone-400 italic">No standards found.</div>`;
-            }
-        }
+        });
 
-        // --- Core 3D Logic ---
-        function createTopography() {
-            const geo = new THREE.PlaneGeometry(2500, 2500, 128, 128);
-            const pos = geo.attributes.position.array;
-            const colors = [];
-            const cBase = new THREE.Color(0xe6dcb5); 
-            const cPeak = new THREE.Color(0x8c6b4a);
+        // --- 3. SUB-COMPONENTS ---
 
-            for(let i=0; i<pos.length; i+=3) {
-                const x = pos[i]; const y = pos[i+1];
-                const z = Math.sin(x*0.005) * Math.cos(y*0.005) * 40 + Math.sin(x*0.01 + y*0.01)*10;
-                pos[i+2] = z;
-                const alpha = (z + 50) / 100; 
-                const c = cBase.clone().lerp(cPeak, Math.min(Math.max(alpha, 0), 1));
-                colors.push(c.r, c.g, c.b);
-            }
-            geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-            geo.computeVertexNormals();
-
-            terrain = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ 
-                vertexColors: true, roughness: 0.9, metalness: 0.1, clippingPlanes: [globalSectionPlane, boreholePlane], wireframe: true 
-            }));
-            terrain.rotation.x = -Math.PI/2; scene.add(terrain);
-            gridHelper = new THREE.GridHelper(2500, 60, 0x78350f, 0x57534e);
-            gridHelper.material.opacity = 0.15; gridHelper.material.transparent = true;
-            gridHelper.position.y = -35; scene.add(gridHelper);
-        }
-
-        function addBIMComponent(name, type, material, pos, scale, suppressLog = false) {
-            const mesh = new THREE.Mesh(new THREE.BoxGeometry(scale.x, scale.y, scale.z), new THREE.MeshStandardMaterial({ 
-                color: 0x94a3b8, roughness: 0.5, metalness: 0.1, clippingPlanes: [globalSectionPlane, boreholePlane] 
-            }));
-            mesh.position.copy(pos); mesh.castShadow = true;
-            mesh.userData = { id: 'TS_PRO_'+Math.random().toString(36).substr(2,4).toUpperCase(), name, type, material, visible: true };
-            bimModel.add(mesh);
-            updateTree();
-            if (!suppressLog) pushAction({ type: 'ADD', target: mesh });
-            return mesh;
-        }
-
-        function updateTree() {
-            const tree = document.getElementById('bim-tree'); if(!tree) return; tree.innerHTML = '';
-            bimModel.children.forEach(child => {
-                const d = child.userData;
-                const node = document.createElement('div');
-                node.className = `bim-node ${selectedEntityId === d.id ? 'selected' : ''}`;
-                node.onclick = () => inspectElement(d);
-                node.innerHTML = `
-                    <div class="flex items-center gap-4"><i data-lucide="package" class="w-4 h-4" style="color:var(--ws-accent)"></i><span class="text-[10px] font-black uppercase text-stone-700">${d.name}</span></div>
-                    <div class="flex gap-2"><button onclick="toggleVisibility('${d.id}', event)" class="p-1 hover:bg-stone-200 rounded-lg"><i data-lucide="${child.visible ? 'eye' : 'eye-off'}" class="w-3.5 h-3.5 text-stone-400"></i></button><button onclick="deleteEntity('${d.id}', event)" class="p-1 hover:bg-red-50 hover:text-red-500 rounded-lg text-rose-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></div>`;
-                tree.appendChild(node);
-            });
-            if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
-
-        function pushAction(action) { actionStack.push(action); if(actionStack.length > 50) actionStack.shift(); }
-        function undoAction() {
-            if (!actionStack.length) { log("Action Stack Empty.", "alert-circle"); return; }
-            const action = actionStack.pop();
-            if (action.type === 'ADD') { bimModel.remove(action.target); logActivity(`Undo: Removed ${action.target.userData.name}`, "rotate-ccw"); } 
-            else if (action.type === 'DELETE') { bimModel.add(action.target); logActivity(`Undo: Restored ${action.target.userData.name}`, "rotate-ccw"); } 
-            else if (action.type === 'VISIBILITY') { action.target.visible = action.oldState; action.target.userData.visible = action.oldState; logActivity(`Undo: Visibility Reverted`, "rotate-ccw"); }
-            updateTree();
-        }
-        function logActivity(message, code) { activityLedger.push({ time: new Date().toISOString(), message, code }); log(message, code === 'BOOT_READY' ? 'shield-check' : 'info'); }
-
-        function exportProjectAudit() {
-            log("SERIALIZING PROJECT REPORT...", "file-text");
-            const report = `TERRASCAN ENGINEERING REPORT\nBUILD 7.7.2 PRO\nEntities: ${bimModel.children.length}\nDate: ${new Date().toISOString()}\n\nLOG:\n` + activityLedger.map(a => `[${a.time}] ${a.message}`).join('\n');
-            const blob = new Blob([report], {type:'text/plain'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `TERRASCAN_REPORT_${Date.now()}.txt`; a.click();
-        }
-
-        function updateBoreholeSection(v) {
-            const depth = parseFloat(v); const strataVal = document.getElementById('val-strata'); if(strataVal) strataVal.innerText = depth.toFixed(1) + "m";
-            boreholePlane.constant = 25 - depth; 
-            const scanBar = document.getElementById('main-scan-line'); if(scanBar) { if(depth > 0) scanBar.classList.add('scan-active'); else scanBar.classList.remove('scan-active'); }
-        }
-
-        function runFEA() {
-            if(isSolving || !bimModel.children.length) return;
-            isSolving = true; log("FEA: Initializing High-Fidelity Physics Solver...", "zap");
-            const scanBar = document.getElementById('main-scan-line'); if(scanBar) scanBar.classList.add('scan-active');
-            let p = 0;
-            const t = setInterval(() => {
-                p += 0.5; const stress = (p * 14.2).toFixed(2); const stressVal = document.getElementById('val-stress'); if(stressVal) stressVal.innerText = stress + " MPa";
-                bimModel.children.forEach(m => { m.traverse(node => { if(node.isMesh) node.material.color.lerp(new THREE.Color(0xf43f5e), 0.05); }); });
-                if(p >= 10) { clearInterval(t); isSolving = false; if(scanBar) scanBar.classList.remove('scan-active'); log(`SOLVE COMPLETE: Max Stress ${stress} MPa.`, "info"); }
-            }, 80);
-        }
-
-        function inspectElement(ent) {
-            selectedEntityId = ent.id; updateTree();
-            const p = document.getElementById('property-panel');
-            if(p) {
-                p.innerHTML = `
-                    <div class="space-y-6 fade-in-up">
-                        <div class="p-5 bg-white/50 rounded-[1.75rem] border-l-4 shadow-sm" style="border-color: var(--ws-accent);">
-                            <span class="text-[9px] font-black uppercase text-stone-500 mb-2 block tracking-widest">System GUID</span>
-                            <div class="font-mono text-[9px] break-all leading-tight text-stone-800">${ent.id}</div>
-                        </div>
-                        <div class="space-y-2">
-                            <div class="p-4 bg-white/40 border border-stone-200 rounded-2xl flex justify-between items-center shadow-sm">
-                                <span class="text-stone-500 uppercase text-[9px] font-black">Functional Class</span>
-                                <span class="text-[10px] font-black text-accent">${ent.type}</span>
+        const InfoScreen = ({ onClose }) => (
+            <div className="absolute inset-0 z-50 bg-slate-100/50 flex items-center justify-center p-8 backdrop-blur-sm animate-in fade-in duration-300">
+                <div className="glass-panel rounded-2xl p-8 w-full max-w-4xl max-h-full overflow-y-auto relative border-white">
+                    <button onClick={onClose} className="absolute top-6 right-6 p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-800 transition-colors">
+                        <X size={24} />
+                    </button>
+                    
+                    <div className="flex flex-col gap-6">
+                        <div className="flex items-center gap-4 border-b border-slate-200 pb-6">
+                            <div className="w-16 h-16 bg-white/50 rounded-2xl flex items-center justify-center border border-slate-200 shadow-sm">
+                                <TraxLogo />
+                            </div>
+                            <div>
+                                <h1 className="text-3xl font-black tracking-tighter text-slate-800 mb-1">TRAX <span className="text-blue-600">KERNEL</span></h1>
+                                <p className="text-sm font-mono text-slate-500 tracking-widest">DATA INTEGRATED MANAGEMENT AUDITOR v2.1</p>
                             </div>
                         </div>
-                    </div>`;
-            }
-            bimModel.children.forEach(m => { 
-                const isSelected = m.userData.id === ent.id;
-                m.traverse(node => { if(node.isMesh) { node.material.emissive.set(isSelected ? new THREE.Color(getComputedStyle(document.documentElement).getPropertyValue('--ws-accent').trim()) : 0x000000); node.material.emissiveIntensity = 0.6; } });
-                if(isSelected) { const bbox = new THREE.Box3().setFromObject(m); const center = new THREE.Vector3(); bbox.getCenter(center); controls.target.copy(center); controls.update(); }
-            });
-        }
 
-        function triggerImport() { document.getElementById('file-input').click(); }
-        function handleFileSelect(e) {
-            Array.from(e.target.files).forEach(file => {
-                const reader = new FileReader(); log(`INGESTING: ${file.name}...`, "upload");
-                reader.onload = (ev) => { 
-                    if (file.name.toLowerCase().endsWith('.obj')) parseOBJ(ev.target.result, file.name); 
-                    else if (file.name.toLowerCase().endsWith('.ifc')) parseIFC(ev.target.result, file.name);
-                };
-                reader.readAsText(file);
-            });
-            e.target.value = ''; 
-        }
-        function parseOBJ(data, filename) {
-            const loader = new THREE.OBJLoader();
-            try {
-                const obj = loader.parse(data);
-                const bbox = new THREE.Box3().setFromObject(obj); const center = new THREE.Vector3(); bbox.getCenter(center);
-                obj.position.sub(center); obj.position.y += 25; 
-                obj.userData = { id: 'OBJ_'+Date.now(), name: filename, type: 'Imported_Mesh', visible: true };
-                obj.traverse(c => { if (c.isMesh) c.material = new THREE.MeshStandardMaterial({ 
-                    color: 0xcbd5e1, // Light Steel
-                    clippingPlanes: [globalSectionPlane, boreholePlane] 
-                }); });
-                bimModel.add(obj); pushAction({ type: 'ADD', target: obj }); updateTree(); log(`SUCCESS: OBJ ${filename} online.`, "check-circle-2");
-            } catch (err) { log("FAIL: Reconstruction error.", "alert-triangle"); }
-        }
-        function parseIFC(data, filename) {
-            log(`PARSING IFC SCHEMA: ${filename}`, "scan");
-            const entities = (data.match(/IFCCOLUMN|IFCWALL|IFCSLAB/g) || []);
-            const count = Math.min(entities.length, 6);
-            for(let i=0; i<count; i++) { addBIMComponent(`${filename}_Node_${i}`, entities[i], 'IFC_Proxy', new THREE.Vector3(Math.random()*60-30, 20, Math.random()*60-30), new THREE.Vector3(10, 15, 10)); }
-            log(`IFC STRUCTURE MAPPED: ${count} Entities.`, "check-circle-2");
-        }
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-4">
+                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                    <Cpu size={14} /> System Architecture
+                                </h3>
+                                <p className="text-sm text-slate-600 leading-relaxed font-medium">
+                                    TRAX is a high-performance BIM kernel engineered for real-time facility auditing. Utilizing a hybrid <strong>React-Three-Fiber</strong> engine, it delivers lightweight parametric modeling without heavy CAD overhead.
+                                </p>
+                                <p className="text-sm text-slate-600 leading-relaxed">
+                                    Features a <strong>Relative Coordinate Level Manager</strong> for dynamic vertical stacking and persistent state management via local graph storage.
+                                </p>
+                            </div>
 
-        function toggleGrid() { if(gridHelper) gridHelper.visible = !gridHelper.visible; document.getElementById('btn-grid').classList.toggle('active'); }
-        function toggleSection() { sectionActive = !sectionActive; document.getElementById('btn-section').classList.toggle('active'); if(globalSectionPlane) globalSectionPlane.constant = sectionActive ? 0 : 10000; }
-        function toggleXray() { xrayActive = !xrayActive; document.getElementById('btn-xray').classList.toggle('active'); if(bimModel) bimModel.children.forEach(m => { m.traverse(node => { if(node.isMesh) { node.material.transparent = xrayActive; node.material.opacity = xrayActive ? 0.35 : 1.0; node.material.wireframe = xrayActive; } }); }); }
+                            <div className="space-y-4">
+                                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                    <Database size={14} /> Core Capabilities
+                                </h3>
+                                <ul className="space-y-3">
+                                    <li className="flex items-start gap-3">
+                                        <div className="p-1.5 bg-emerald-100 rounded text-emerald-600 mt-0.5"><DollarSign size={12}/></div>
+                                        <div>
+                                            <strong className="text-slate-800 text-xs block">Real-Time Cost-OS</strong>
+                                            <span className="text-[10px] text-slate-500">Live valuation based on parametric volume & material cost drivers.</span>
+                                        </div>
+                                    </li>
+                                    <li className="flex items-start gap-3">
+                                        <div className="p-1.5 bg-purple-100 rounded text-purple-600 mt-0.5"><Layers size={12}/></div>
+                                        <div>
+                                            <strong className="text-slate-800 text-xs block">Ghosting Context Engine</strong>
+                                            <span className="text-[10px] text-slate-500">Active level isolation with vertical context rendering.</span>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
 
-        function toggleVisibility(id, e) {
-            e.stopPropagation();
-            const c = bimModel.children.find(x => x.userData.id === id);
-            if(c) {
-                c.visible = !c.visible;
-                updateTree();
-            }
-        }
+                        {/* VR / SPATIAL COMPUTING SECTION */}
+                        <div className="grid grid-cols-1 gap-6 pt-4 border-t border-slate-200">
+                            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                <Glasses size={14} /> Spatial Computing & Hardware
+                            </h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="bg-white/40 p-4 rounded-xl border border-white">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Glasses size={16} className="text-indigo-600"/>
+                                        <span className="text-xs font-bold text-slate-700">WebXR Compatibility</span>
+                                    </div>
+                                    <p className="text-[10px] text-slate-500 leading-relaxed">
+                                        Engine is <strong>WebXR compliant</strong>, supporting <strong>Meta Quest (2/3/Pro)</strong>, <strong>Apple Vision Pro</strong>, and tethered PC-VR (HTC Vive, Index) via browser.
+                                    </p>
+                                </div>
+                                <div className="bg-white/40 p-4 rounded-xl border border-white">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <MonitorSmartphone size={16} className="text-blue-600"/>
+                                        <span className="text-xs font-bold text-slate-700">Hardware Handshake</span>
+                                    </div>
+                                    <p className="text-[10px] text-slate-500 leading-relaxed">
+                                        <strong>Automatic Recognition:</strong> No manual driver installation required. The kernel automatically detects headset type and input capabilities (Hands vs. Controllers) upon session entry.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
 
-        function deleteEntity(id, e) {
-            e.stopPropagation();
-            const c = bimModel.children.find(x => x.userData.id === id);
-            if(c) {
-                pushAction({ type: 'DELETE', target: c });
-                bimModel.remove(c);
-                updateTree();
-                if(selectedEntityId === id) document.getElementById('property-panel').innerHTML = '';
-                logActivity(`Deleted: ${c.userData.name}`, "trash-2");
-            }
-        }
+                        <div className="bg-white/40 rounded-xl p-4 border border-white mt-2">
+                            <div className="flex justify-between items-center">
+                                <div className="flex gap-8 text-[10px] font-mono text-slate-400">
+                                    <span>RENDER: WEBGL2</span>
+                                    <span>PRECISION: FP32</span>
+                                    <span>STATE: PERSISTENT</span>
+                                </div>
+                                <button onClick={onClose} className="bg-slate-900 hover:bg-slate-800 text-white px-6 py-2 rounded-lg text-xs font-bold transition shadow-lg">
+                                    INITIALIZE SYSTEM
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
 
-        function clearEntities() {
-            bimModel.clear(); updateTree();
-            const propPanel = document.getElementById('property-panel'); if(propPanel) propPanel.innerHTML = '';
-            log("Project domain purged.", "trash-2");
-        }
+        const LevelManager = ({ levels, activeLevelId, setActiveLevelId, addLevel, updateLevel, projectStats }) => (
+            <div className="flex flex-col gap-4 h-full pointer-events-none">
+                <div className="glass-panel rounded-xl p-4 flex flex-col gap-2 max-h-[40%] pointer-events-auto">
+                    <div className="flex justify-between items-center mb-2">
+                        <h3 className="text-xs font-bold text-slate-400 flex items-center gap-2 tracking-wider"><Layers size={12}/> LEVELS</h3>
+                        <Tooltip text="Create New Level">
+                            <button onClick={addLevel} className="p-1.5 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-md transition shadow-sm border border-blue-200"><Plus size={14}/></button>
+                        </Tooltip>
+                    </div>
+                    <div className="space-y-1 overflow-y-auto pr-1">
+                        {[...levels].reverse().map(l => (
+                            <div 
+                                key={l.id}
+                                onClick={() => setActiveLevelId(l.id)}
+                                className={`p-3 rounded-lg cursor-pointer border transition-all flex justify-between items-center group shadow-sm ${activeLevelId === l.id ? 'bg-white border-blue-400 ring-1 ring-blue-100' : 'bg-white/40 border-transparent hover:bg-white hover:border-slate-200'}`}
+                            >
+                                <div>
+                                    <div className={`text-xs font-bold ${activeLevelId === l.id ? 'text-slate-900' : 'text-slate-500'}`}>{l.name}</div>
+                                    <div className="text-[10px] font-mono text-slate-400 flex items-center gap-1 mt-0.5">
+                                        ELEV: 
+                                        <input 
+                                            type="number" 
+                                            value={l.elevation} 
+                                            onClick={(e) => e.stopPropagation()}
+                                            onChange={(e) => updateLevel(l.id, parseFloat(e.target.value))}
+                                            className="w-12 bg-transparent border-b border-slate-300 focus:border-blue-500 text-slate-600 focus:text-slate-900 outline-none text-right transition-colors"
+                                        />m
+                                    </div>
+                                </div>
+                                {activeLevelId === l.id && <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]"></div>}
+                            </div>
+                        ))}
+                    </div>
+                </div>
 
-        function log(m, icon = "info") {
-            const l = document.getElementById('log'); if(!l) return;
-            const d = document.createElement('div'); d.className = "flex items-start border-b border-stone-300 pb-3 transition-all";
-            d.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4 mr-3 text-stone-500"></i><span class="text-[11px] leading-snug text-stone-600">${m}</span>`;
-            l.prepend(d); if (typeof lucide !== 'undefined') lucide.createIcons();
-        }
+                <div className="glass-panel rounded-xl p-4 flex-1 pointer-events-auto">
+                    <h3 className="text-xs font-bold text-slate-400 flex items-center gap-2 mb-4 tracking-wider"><Calculator size={12}/> METRICS</h3>
+                    <div className="space-y-5">
+                        <div className="bg-white/40 p-3 rounded-lg border border-white">
+                            <div className="text-[9px] text-slate-400 uppercase tracking-widest font-bold mb-1">GROSS FLOOR AREA</div>
+                            <div className="text-2xl font-black text-slate-700">{projectStats.levelStats[activeLevelId]?.gfa.toFixed(1) || 0} <span className="text-xs font-normal text-slate-400">m²</span></div>
+                        </div>
+                        <div className="flex justify-between items-center px-1">
+                            <div className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">ASSET COUNT</div>
+                            <div className="text-lg font-bold text-blue-600">{projectStats.levelStats[activeLevelId]?.items || 0} <span className="text-[9px] text-slate-400 font-normal">OBJS</span></div>
+                        </div>
+                        <div className="h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
+                        <div className="px-1">
+                            <div className="text-[10px] text-slate-400 uppercase tracking-widest font-bold mb-1">VALUATION</div>
+                            <div className="text-xl font-bold text-emerald-600 font-mono">${((projectStats.levelStats[activeLevelId]?.cost || 0) / 1000).toFixed(1)}k</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
 
-        function setupHandlers() {
-            window.addEventListener('resize', () => {
-                if(cameraPersp && renderer) { 
-                    cameraPersp.aspect = window.innerWidth/window.innerHeight; cameraPersp.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); 
-                    const aspect = window.innerWidth/window.innerHeight; const s = 1000;
-                    if(cameraOrtho) { cameraOrtho.left = -s*aspect/2; cameraOrtho.right = s*aspect/2; cameraOrtho.top = s/2; cameraOrtho.bottom = -s/2; cameraOrtho.updateProjectionMatrix(); }
-                }
-            });
-            const canvContainer = document.getElementById('canvas-container');
-            if(canvContainer) {
-                // Raycasting setup
-                const raycaster = new THREE.Raycaster();
-                const mouse = new THREE.Vector2();
+        const PropertyPanel = ({ selectedElement, materials, setElements, setSelectedId, elements, showCostDrivers, setShowCostDrivers, setMaterials, INITIAL_MATERIALS }) => (
+             <div className="glass-panel rounded-xl p-4 flex-1 overflow-auto animate-in slide-in-from-right-4 pointer-events-auto">
+                {showCostDrivers ? (
+                    <div>
+                        <h3 className="text-xs font-bold text-amber-600 mb-4 flex items-center gap-2 tracking-wider"><Settings size={12}/> COST DRIVERS</h3>
+                        <div className="space-y-3">
+                            {Object.entries(materials).map(([key, mat]) => (
+                                <div key={key} className="group bg-white/40 p-3 rounded-lg border border-transparent hover:border-white transition-all">
+                                    <div className="flex justify-between text-[10px] text-slate-600 mb-1 font-bold">
+                                        <span>{mat.name}</span>
+                                        <span className="font-mono opacity-50 font-normal">per {mat.unit}</span>
+                                    </div>
+                                    <div className="relative">
+                                        <span className="absolute left-2 top-1.5 text-xs text-slate-400">$</span>
+                                        <input 
+                                            type="number" 
+                                            value={mat.cost}
+                                            onChange={(e) => setMaterials({...materials, [key]: {...mat, cost: parseFloat(e.target.value)}})}
+                                            className="w-full bg-white border border-slate-200 rounded p-1.5 pl-5 text-xs font-bold text-slate-700 focus:border-amber-400 focus:ring-1 focus:ring-amber-200 focus:outline-none transition-all"
+                                        />
+                                    </div>
+                                </div>
+                            ))}
+                            <button onClick={() => setMaterials(INITIAL_MATERIALS)} className="w-full py-2 text-[10px] text-slate-500 hover:text-slate-700 hover:bg-slate-100 border border-dashed border-slate-300 rounded mt-4 transition-colors">RESET DEFAULTS</button>
+                        </div>
+                    </div>
+                ) : selectedElement ? (
+                    <div>
+                        <div className="flex justify-between items-start mb-4 border-b border-slate-200 pb-3">
+                            <div>
+                                <div className="text-sm font-black text-slate-800">{selectedElement.tag}</div>
+                                <div className="text-[10px] font-mono text-blue-500">{selectedElement.id.slice(0,8)}</div>
+                            </div>
+                            <Tooltip text="Delete Object">
+                                <button onClick={() => {setElements(elements.filter(e=>e.id!==selectedElement.id)); setSelectedId(null)}} className="text-red-400 hover:text-red-600 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors"><Trash2 size={14}/></button>
+                            </Tooltip>
+                        </div>
+                        
+                        <div className="space-y-4">
+                            <div className="bg-white/40 p-2 rounded-lg">
+                                <div className="text-[9px] text-slate-400 font-bold mb-1 uppercase">TYPE</div>
+                                <div className="bg-white border border-slate-200 p-2 rounded text-xs text-slate-600 font-mono shadow-sm">{selectedElement.type}</div>
+                            </div>
+                            <div>
+                                <div className="text-[9px] text-slate-400 font-bold mb-1 uppercase">MATERIAL</div>
+                                <select 
+                                    value={selectedElement.data.materialKey}
+                                    onChange={(e) => setElements(elements.map(el => el.id === selectedElement.id ? {...el, data: {...el.data, materialKey: e.target.value}} : el))}
+                                    className="w-full bg-white border border-slate-200 p-2 rounded text-xs text-slate-700 font-bold focus:outline-none focus:border-blue-400 cursor-pointer shadow-sm"
+                                >
+                                    {Object.entries(materials).map(([k, m]) => <option key={k} value={k}>{m.name}</option>)}
+                                </select>
+                            </div>
+                            
+                            {selectedElement.type === 'IFCWALL' && (
+                                <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                        <div className="text-[9px] text-slate-400 font-bold mb-1 uppercase">LENGTH (m)</div>
+                                        <input type="number" step="0.1" value={selectedElement.params.length} 
+                                            onChange={e => setElements(elements.map(el => el.id===selectedElement.id ? {...el, params:{...el.params, length: parseFloat(e.target.value)}} : el))}
+                                            className="w-full bg-white border border-slate-200 p-2 rounded text-xs text-slate-700 shadow-sm focus:border-blue-400 focus:outline-none" />
+                                    </div>
+                                    <div>
+                                        <div className="text-[9px] text-slate-400 font-bold mb-1 uppercase">HEIGHT (m)</div>
+                                        <input type="number" step="0.1" value={selectedElement.params.height} 
+                                            onChange={e => setElements(elements.map(el => el.id===selectedElement.id ? {...el, params:{...el.params, height: parseFloat(e.target.value)}} : el))}
+                                            className="w-full bg-white border border-slate-200 p-2 rounded text-xs text-slate-700 shadow-sm focus:border-blue-400 focus:outline-none" />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                ) : (
+                    <div className="h-full flex flex-col items-center justify-center opacity-30">
+                        <MousePointer size={48} className="text-slate-400 mb-2"/>
+                        <p className="text-xs text-center font-bold text-slate-500 tracking-widest">SELECT OBJECT</p>
+                    </div>
+                )}
+            </div>
+        );
 
-                canvContainer.addEventListener('mousemove', (e) => {
-                    const rect = canvContainer.getBoundingClientRect();
-                    mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-                    mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-                    const coordEl = document.getElementById('coord-display');
-                    if(coordEl) coordEl.innerText = `LOCAL_REF: [${(mouse.x*800).toFixed(2)}, ${(mouse.y*800).toFixed(2)}, 0.00]`;
-                });
-                canvContainer.addEventListener('mousedown', (e) => {
-                    if(!currentCamera) return;
-                    // Recalculate mouse pos for raycaster inside click
-                    const rect = canvContainer.getBoundingClientRect();
-                    mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-                    mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        // --- 4. SCENE GRAPH ---
 
-                    raycaster.setFromCamera(mouse, currentCamera); 
-                    const hits = raycaster.intersectObjects(bimModel.children, true);
-                    if(hits.length > 0) { 
-                        let t = hits[0].object; while(t && !t.userData.id && t.parent) t = t.parent; 
-                        if(t && t.userData.id) inspectElement(t.userData); 
+        const SceneGraph = ({ levels, elements, activeLevelId, viewMode, layerVis, materials, mode, selectedId, setSelectedId, handleUpdate, setOrbitEnabled, snap }) => {
+            return (
+                <>
+                    <ambientLight intensity={0.8} />
+                    <directionalLight position={[20, 30, 10]} intensity={1.2} castShadow shadow-mapSize={[2048,2048]} color="#ffffff" />
+                    <Environment preset="apartment" />
+
+                    {levels.map(level => {
+                        const isLevelActive = level.id === activeLevelId;
+                        const levelElements = elements.filter(el => el.levelId === level.id);
+
+                        return (
+                            <group key={level.id} position={[0, level.elevation, 0]}>
+                                {isLevelActive && (
+                                    <>
+                                        <Grid infiniteGrid cellSize={1} sectionSize={GRID_SIZE} sectionColor="#94a3b8" cellColor="#e2e8f0" fadeDistance={40} />
+                                        <Text position={[12, 0, 12]} rotation={[-Math.PI/2, 0, 0]} fontSize={2} color="#3b82f6" fillOpacity={0.2} fontWeight={800}>
+                                            {level.name.toUpperCase()}
+                                        </Text>
+                                    </>
+                                )}
+
+                                {levelElements.map(el => {
+                                    if (!layerVis[el.type]) return null;
+                                    
+                                    if (viewMode === 'ISOLATE' && !isLevelActive) return null;
+                                    const isGhosted = (viewMode === 'GHOST' && !isLevelActive);
+
+                                    return (
+                                        <BimElement 
+                                            key={el.id} 
+                                            element={el} 
+                                            isSelected={selectedId === el.id} 
+                                            onSelect={setSelectedId} 
+                                            mode={mode} 
+                                            onTransformEnd={handleUpdate}
+                                            setOrbitEnabled={setOrbitEnabled}
+                                            materialDb={materials}
+                                            isGhosted={isGhosted}
+                                            snap={snap}
+                                        />
+                                    );
+                                })}
+                            </group>
+                        );
+                    })}
+                </>
+            );
+        };
+
+        // --- 5. MAIN APP ---
+
+        function TraxApp() {
+            const [levels, setLevels] = useState(() => JSON.parse(localStorage.getItem('trax_levels')) || [{ id: 'L1', name: 'Level 1', elevation: 0 }]);
+            const [activeLevelId, setActiveLevelId] = useState('L1');
+            const [elements, setElements] = useState(() => JSON.parse(localStorage.getItem('trax_elements')) || []);
+            const [materials, setMaterials] = useState(() => JSON.parse(localStorage.getItem('trax_materials')) || INITIAL_MATERIALS);
+            
+            const [selectedId, setSelectedId] = useState(null);
+            const [mode, setMode] = useState('select'); 
+            const [orbitEnabled, setOrbitEnabled] = useState(true);
+            const [viewMode, setViewMode] = useState('GHOST');
+            const [layerVis, setLayerVis] = useState({'IFCWALL': true, 'IFCCOLUMN': true, 'IFCSLAB': true, 'IFCFURNISHING': true});
+            const [snap, setSnap] = useState(true);
+            
+            const [showInfo, setShowInfo] = useState(true);
+            const [showImport, setShowImport] = useState(false);
+            const [showCostDrivers, setShowCostDrivers] = useState(false);
+            const [svgInput, setSvgInput] = useState("");
+            const fileInputRef = useRef(null);
+
+            const activeLevel = levels.find(l => l.id === activeLevelId);
+            const selectedElement = useMemo(() => elements.find(e => e.id === selectedId), [elements, selectedId]);
+
+            useEffect(() => { localStorage.setItem('trax_levels', JSON.stringify(levels)); }, [levels]);
+            useEffect(() => { localStorage.setItem('trax_elements', JSON.stringify(elements)); }, [elements]);
+            useEffect(() => { localStorage.setItem('trax_materials', JSON.stringify(materials)); }, [materials]);
+
+            const updateLevel = (id, newElev) => {
+                setLevels(levels.map(l => l.id === id ? { ...l, elevation: newElev } : l));
+            };
+
+            const addLevel = () => {
+                const nextId = `L${levels.length + 1}`;
+                const prevElev = levels[levels.length-1].elevation;
+                setLevels([...levels, { id: nextId, name: `Level ${levels.length + 1}`, elevation: prevElev + 4 }]);
+                setActiveLevelId(nextId);
+            };
+
+            const handleUpdate = useCallback((id, obj) => {
+                setElements(prev => prev.map(el => 
+                    el.id === id ? { ...el, position: [obj.position.x, obj.position.y, obj.position.z], rotation: [obj.rotation.x, obj.rotation.y, obj.rotation.z] } : el
+                ));
+            }, []);
+
+            const projectStats = useMemo(() => {
+                let totalCost = 0;
+                let totalCount = 0;
+                const levelStats = {};
+                levels.forEach(l => levelStats[l.id] = { name: l.name, cost: 0, gfa: 0, items: 0 });
+
+                elements.forEach(el => {
+                    const matKey = el.data?.materialKey || 'CONCRETE_C25';
+                    const mat = materials[matKey] || materials['CONCRETE_C25'];
+                    const lvl = el.levelId || 'L1';
+                    
+                    let vol = 1;
+                    const p = el.params;
+                    if(el.type === 'IFCWALL') vol = p.length * p.height * p.thickness;
+                    else if(el.type === 'IFCCOLUMN') vol = p.height * p.width * p.depth;
+                    else if(el.type === 'IFCSLAB') vol = p.width * 0.2 * p.depth;
+
+                    let cost = (mat.unit === 'item') ? mat.cost : vol * mat.cost;
+
+                    if(el.type === 'IFCSLAB') {
+                        if(levelStats[lvl]) levelStats[lvl].gfa += (p.width * p.depth);
                     }
+                    if(levelStats[lvl]) {
+                        levelStats[lvl].cost += cost;
+                        levelStats[lvl].items += 1;
+                    }
+                    totalCost += cost;
+                    totalCount++;
                 });
-            }
+                return { totalCost, totalCount, levelStats };
+            }, [elements, materials, levels]);
+
+            const parseSVG = () => {
+                try {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(svgInput, "image/svg+xml");
+                    const newEls = [];
+                    const errorNode = doc.querySelector('parsererror');
+                    if (errorNode) throw new Error("Invalid SVG");
+                    
+                    doc.querySelectorAll('line').forEach((line, i) => {
+                        const x1 = parseFloat(line.getAttribute('x1'));
+                        const y1 = parseFloat(line.getAttribute('y1'));
+                        const x2 = parseFloat(line.getAttribute('x2'));
+                        const y2 = parseFloat(line.getAttribute('y2'));
+                        if(isNaN(x1)) return;
+
+                        const dx = x2 - x1;
+                        const dz = y2 - y1;
+                        const len = Math.sqrt(dx*dx + dz*dz);
+                        const angle = Math.atan2(dx, dz);
+                        const midX = (x1 + x2)/2 - 10;
+                        const midZ = (y1 + y2)/2 - 10;
+                        
+                        newEls.push({
+                            id: uuidv4(), tag: `WAL-${levels.length}${i}`, levelId: activeLevelId,
+                            type: 'IFCWALL', color: '#94a3b8',
+                            params: { length: len, height: 3, thickness: 0.2 },
+                            data: { materialKey: 'CONCRETE_C25' },
+                            position: [midX, 1.5, midZ], rotation: [0, angle, 0]
+                        });
+                    });
+
+                    setElements(prev => [...prev, ...newEls]);
+                    setShowImport(false);
+                } catch (e) {
+                    alert("Import Failed: " + e.message);
+                }
+            };
+
+             const exportCSV = () => {
+                const headers = ["Level", "Tag", "Type", "Material", "LocalX", "LocalY", "LocalZ", "Unit Cost", "Total Cost"];
+                const rows = elements.map(el => {
+                    const mat = materials[el.data.materialKey] || { name: 'Unknown', cost: 0 };
+                    const lvl = levels.find(l => l.id === el.levelId)?.name || 'Unknown';
+                    let cost = 0; 
+                    return [lvl, el.tag, el.type, mat.name, el.position[0], el.position[1], el.position[2], mat.cost, cost].join(",");
+                });
+                const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows].join("\n");
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", "trax_audit_data.csv");
+                document.body.appendChild(link);
+                link.click();
+            };
+
+            return (
+                <div className="w-full h-screen text-slate-800 overflow-hidden relative select-none">
+                    
+                    {/* TOP BAR */}
+                    <div className="absolute top-0 left-0 right-0 h-16 glass-panel border-b border-white z-20 pointer-events-auto flex items-center justify-between px-6">
+                        <div className="flex items-center gap-3">
+                            <div className="p-1.5 bg-blue-50 rounded-lg border border-blue-100 shadow-sm">
+                                <TraxLogo />
+                            </div>
+                            <div>
+                                <h1 className="text-lg font-black tracking-widest text-slate-800 leading-none">TRAX</h1>
+                                <div className="text-[9px] font-mono text-slate-500 tracking-[0.2em] font-bold">DATA INTEGRATED MANAGEMENT AUDITOR</div>
+                            </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-4">
+                            <Tooltip text="System Info">
+                                <button onClick={() => setShowInfo(true)} className="p-2 rounded-lg hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-colors">
+                                    <Info size={18} />
+                                </button>
+                            </Tooltip>
+
+                            <div className="flex items-center gap-2 text-xs font-bold text-slate-500 bg-white/50 border border-white p-1 rounded-lg shadow-sm">
+                                <Tooltip text="Toggle Grid Snap (0.5m)">
+                                    <button onClick={() => setSnap(!snap)} className={`p-1.5 rounded-md flex items-center gap-1 transition-colors ${snap ? 'bg-indigo-600 text-white shadow-md' : 'hover:bg-slate-200'}`}>
+                                        <Magnet size={14}/> {snap ? 'SNAP ON' : 'SNAP OFF'}
+                                    </button>
+                                </Tooltip>
+                                <div className="w-px h-4 bg-slate-300"></div>
+                                <Tooltip text="Cycle View Modes">
+                                    <button onClick={() => setViewMode(v => v === 'ALL' ? 'GHOST' : (v === 'GHOST' ? 'ISOLATE' : 'ALL'))} className="p-1.5 rounded-md hover:bg-slate-200 flex items-center gap-1 transition-colors">
+                                        {viewMode === 'ALL' && <Eye size={14} className="text-slate-700"/>}
+                                        {viewMode === 'GHOST' && <Layers size={14} className="text-indigo-600"/>}
+                                        {viewMode === 'ISOLATE' && <EyeOff size={14} className="text-rose-500"/>}
+                                        {viewMode}
+                                    </button>
+                                </Tooltip>
+                            </div>
+
+                            <div className="flex items-center gap-2 bg-white/50 border border-white p-1 rounded-lg shadow-sm">
+                                {Object.entries(LAYER_DEFS).map(([type, def]) => {
+                                    const Icon = def.icon;
+                                    return (
+                                        <Tooltip key={type} text={`Toggle ${def.label}`}>
+                                            <button 
+                                                onClick={() => setLayerVis(p => ({...p, [type]: !p[type]}))} 
+                                                className={`p-2 rounded-md transition-all ${layerVis[type] ? 'bg-slate-800 text-white shadow-md' : 'bg-transparent text-slate-400 hover:bg-slate-200'}`}
+                                            >
+                                                <Icon size={14}/>
+                                            </button>
+                                        </Tooltip>
+                                    )
+                                })}
+                            </div>
+
+                            <Tooltip text="Export CSV Manifest">
+                                <button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition shadow-lg shadow-emerald-600/20 border border-emerald-500">
+                                    <FileSpreadsheet size={14} /> EXPORT
+                                </button>
+                            </Tooltip>
+                        </div>
+                    </div>
+
+                    {/* LEFT PANEL */}
+                    <div className="absolute left-4 top-24 bottom-4 w-64 z-10 pointer-events-none">
+                        <LevelManager 
+                            levels={levels} 
+                            activeLevelId={activeLevelId} 
+                            setActiveLevelId={setActiveLevelId} 
+                            addLevel={addLevel}
+                            updateLevel={updateLevel}
+                            projectStats={projectStats}
+                        />
+                    </div>
+
+                    {/* RIGHT PANEL */}
+                    <div className="absolute right-4 top-24 bottom-4 w-72 flex flex-col gap-4 z-10 pointer-events-none">
+                        <div className="glass-panel rounded-xl p-2 pointer-events-auto flex justify-center gap-2 shadow-sm">
+                            <Tooltip text="Select Mode">
+                                <button onClick={() => setMode('select')} className={`p-2.5 rounded-lg transition-all ${mode === 'select' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-800 hover:bg-slate-100'}`}><MousePointer size={20}/></button>
+                            </Tooltip>
+                            <Tooltip text="Move Mode">
+                                <button onClick={() => setMode('translate')} className={`p-2.5 rounded-lg transition-all ${mode === 'translate' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-800 hover:bg-slate-100'}`}><Axis3d size={20}/></button>
+                            </Tooltip>
+                            <div className="w-px bg-slate-200 mx-1"></div>
+                            <Tooltip text="Import Data">
+                                <button onClick={() => setShowImport(true)} className="p-2.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 transition-colors"><Upload size={20}/></button>
+                            </Tooltip>
+                            <Tooltip text="Manual Cost Drivers">
+                                <button onClick={() => setShowCostDrivers(!showCostDrivers)} className={`p-2.5 rounded-lg transition-all ${showCostDrivers ? 'bg-amber-500 text-white shadow-md' : 'text-amber-500 hover:bg-amber-50'}`}><DollarSign size={20}/></button>
+                            </Tooltip>
+                        </div>
+
+                        <div className="glass-panel rounded-xl p-4 pointer-events-auto">
+                            <div className="flex items-center justify-between mb-2">
+                                <h3 className="text-xs font-bold text-slate-400 flex items-center gap-2 tracking-wider"><PieChart size={12}/> TOTAL PROJECT</h3>
+                            </div>
+                            <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500">
+                                ${(projectStats.totalCost / 1000).toFixed(1)}k
+                            </div>
+                            <div className="text-[10px] text-slate-500 mt-1 font-mono font-medium">
+                                {projectStats.totalCount} ASSETS TRACKED ACROSS {levels.length} LEVELS
+                            </div>
+                        </div>
+
+                        <PropertyPanel 
+                            selectedElement={selectedElement} 
+                            materials={materials} 
+                            setElements={setElements} 
+                            setSelectedId={setSelectedId}
+                            elements={elements}
+                            showCostDrivers={showCostDrivers}
+                            setMaterials={setMaterials}
+                            INITIAL_MATERIALS={INITIAL_MATERIALS}
+                        />
+                    </div>
+
+                    {/* INFO SCREEN */}
+                    {showInfo && <InfoScreen onClose={() => setShowInfo(false)} />}
+
+                    {/* IMPORT MODAL */}
+                    {showImport && (
+                        <div className="absolute inset-0 z-50 bg-slate-900/40 flex items-center justify-center p-8 backdrop-blur-sm">
+                            <div className="glass-panel rounded-2xl p-8 w-full max-w-2xl flex flex-col pointer-events-auto shadow-2xl">
+                                <h2 className="text-xl font-bold text-slate-800 mb-2">IMPORT DATA TO <span className="text-blue-600">{activeLevel.name}</span></h2>
+                                <p className="text-xs text-slate-500 mb-6 font-medium">IMPORTED GEOMETRY WILL BE FLATTENED AND EXTRUDED RELATIVE TO LEVEL ELEVATION ({activeLevel.elevation}m)</p>
+                                
+                                <div onClick={() => fileInputRef.current.click()} className="border-2 border-dashed border-slate-300 hover:border-blue-500 hover:bg-blue-50/50 rounded-xl p-12 flex flex-col items-center justify-center cursor-pointer transition-all group mb-6">
+                                    <FileImage size={48} className="text-slate-300 group-hover:text-blue-500 mb-4 transition-colors"/>
+                                    <div className="text-sm font-bold text-slate-600 group-hover:text-blue-600">UPLOAD SVG FLOORPLAN</div>
+                                    <input type="file" ref={fileInputRef} className="hidden" accept=".svg" onChange={(e) => {
+                                        const file = e.target.files[0];
+                                        if(!file) return;
+                                        const reader = new FileReader();
+                                        reader.onload = (ev) => setSvgInput(ev.target.result);
+                                        reader.readAsText(file);
+                                    }} />
+                                </div>
+
+                                <div className="flex justify-end gap-3">
+                                    <button onClick={() => setShowImport(false)} className="px-6 py-2 rounded-lg text-slate-500 hover:bg-slate-100 text-xs font-bold transition-colors">CANCEL</button>
+                                    <button onClick={parseSVG} disabled={!svgInput} className="px-8 py-2 bg-blue-600 disabled:opacity-50 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition shadow-lg shadow-blue-500/20">PROCESS IMPORT</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* CANVAS */}
+                    <div className="absolute inset-0">
+                        <Suspense fallback={null}>
+                            <Canvas shadows dpr={[1, 2]} gl={{ preserveDrawingBuffer: true, antialias: true }}>
+                                <PerspectiveCamera makeDefault position={[30, 40, 30]} fov={35} />
+                                <OrbitControls makeDefault enableDamping dampingFactor={0.1} enabled={orbitEnabled} maxPolarAngle={Math.PI/2 - 0.1} />
+                                <SceneGraph 
+                                    levels={levels}
+                                    elements={elements}
+                                    activeLevelId={activeLevelId}
+                                    viewMode={viewMode}
+                                    layerVis={layerVis}
+                                    materials={materials}
+                                    mode={mode}
+                                    selectedId={selectedId}
+                                    setSelectedId={setSelectedId}
+                                    handleUpdate={handleUpdate}
+                                    setOrbitEnabled={setOrbitEnabled}
+                                    snap={snap}
+                                />
+                            </Canvas>
+                        </Suspense>
+                    </div>
+
+                </div>
+            );
         }
 
-        window.onload = init;
-        window.triggerImport = () => { const input = document.getElementById('file-input'); if(input) input.click(); };
+        const root = createRoot(document.getElementById('root'));
+        root.render(<TraxApp />);
     </script>
 </body>
 </html>
