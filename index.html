@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TERRASCAN Infinite | XR Spatial Analysis</title>
+    <title>TERRASCAN Infinite | Project Manager</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -103,7 +103,19 @@
             border-left-color: var(--ws-accent); 
         }
 
+        .layer-header {
+            @apply flex items-center justify-between p-2 mt-2 bg-stone-200/50 rounded-lg text-[9px] font-black uppercase tracking-widest text-stone-600 cursor-pointer hover:bg-stone-200;
+        }
+
         .database-item { @apply p-3 border-b border-stone-300 hover:bg-stone-100/50 transition-colors cursor-help; }
+
+        /* Project Data Input Styling */
+        .data-input {
+            @apply w-full bg-transparent border-b border-stone-300 text-[10px] font-mono text-stone-800 focus:outline-none focus:border-stone-600 py-1 transition-colors;
+        }
+        .data-label {
+            @apply text-[8px] font-black uppercase text-stone-400 tracking-widest mb-1 block;
+        }
 
         /* --- 2D Reference Loading Screen Styles --- */
         #loader-overlay {
@@ -252,7 +264,6 @@
 
     <!-- REFERENCE-MATCHED LOADING SCREEN -->
     <div id="loader-overlay">
-        
         <!-- Header -->
         <div class="loader-header">
             <div class="terra-logo-block">
@@ -290,22 +301,56 @@
 
         <!-- Main Content Grid -->
         <div class="loader-main">
-            <!-- Left: Manual -->
+            <!-- Left: Manual Box -->
             <div class="manual-box">
-                <h3 class="text-xs font-black uppercase tracking-widest text-stone-800 mb-4">User Manual:</h3>
-                <div class="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4 text-[10px] text-stone-600 font-medium leading-relaxed">
-                    <p>
-                        <strong class="text-stone-900 block mb-1">01. INGESTION PROTOCOL</strong>
-                        Drag and drop .OBJ or .IFC files. The "AI Problemist" engine will auto-scan geometry for geological conflicts.
-                    </p>
-                    <p>
-                        <strong class="text-stone-900 block mb-1">02. IMMERSIVE XR</strong>
-                        Connect VR/AR Headset. Select "IMMERSIVE" tab to engage pass-through geology overlay. Hand tracking enabled for borehole manipulation.
-                    </p>
-                    <p>
-                        <strong class="text-stone-900 block mb-1">03. AI RISK DETECTION</strong>
-                        Real-time boreholes will appear autonomously. Red sectors indicate "Liquefaction Risk" or "Void".
-                    </p>
+                <h3 class="text-xs font-black uppercase tracking-widest text-stone-800 mb-4 flex items-center gap-2">
+                    <i data-lucide="terminal" class="w-4 h-4 text-accent"></i> 
+                    Technical Manifesto
+                </h3>
+                <div class="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-5 text-[10px] text-stone-600 font-medium leading-relaxed">
+                    
+                    <!-- Intro -->
+                    <div class="border-b border-stone-300 pb-3">
+                        <strong class="text-stone-900 block mb-1 uppercase tracking-wider">00. System Overview</strong>
+                        TERRASCAN v9.5 is a high-fidelity spatial computation engine designed for geotechnical surveying, BIM metadata aggregation, and finite element analysis (FEA) simulation. It features an autonomous AI "Problemist" core for real-time anomaly detection.
+                    </div>
+
+                    <!-- Workflow -->
+                    <div>
+                        <strong class="text-stone-900 block mb-1 uppercase tracking-wider">01. Project Workflow</strong>
+                        <ul class="list-disc pl-3 space-y-1 marker:text-stone-400">
+                            <li><span class="text-stone-800 font-bold">Initialization:</span> Set Metadata (ID, Lead) in the top-left Project Card.</li>
+                            <li><span class="text-stone-800 font-bold">Layering:</span> Use the Entity Panel to generate custom folders (Phasing).</li>
+                            <li><span class="text-stone-800 font-bold">Ingestion:</span> Drag & drop .OBJ/.IFC assets directly into the viewport.</li>
+                            <li><span class="text-stone-800 font-bold">Metering:</span> Select objects to input cost/material data in the Inspector.</li>
+                        </ul>
+                    </div>
+
+                    <!-- Case Usages -->
+                    <div>
+                        <strong class="text-stone-900 block mb-1 uppercase tracking-wider">02. Case Architectures</strong>
+                        <div class="grid grid-cols-2 gap-2 mt-2">
+                            <div class="bg-stone-100 p-2 rounded">
+                                <span class="block font-bold text-emerald-700">Geotechnical</span>
+                                Borehole scanning for voids & liquefaction risks.
+                            </div>
+                            <div class="bg-stone-100 p-2 rounded">
+                                <span class="block font-bold text-rose-700">Structural</span>
+                                Stress logic nodes & FEA mesh displacement.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Navigation -->
+                    <div>
+                        <strong class="text-stone-900 block mb-1 uppercase tracking-wider">03. Navigation & XR</strong>
+                        <span class="font-mono text-[9px] bg-stone-200 px-1 rounded">LMB</span> Orbit & Select 
+                        <span class="font-mono text-[9px] bg-stone-200 px-1 rounded ml-1">RMB</span> Pan 
+                        <span class="font-mono text-[9px] bg-stone-200 px-1 rounded ml-1">WHEEL</span> Zoom.
+                        <br>
+                        Toggle <span class="text-violet-600 font-bold">IMMERSIVE</span> workspace for VR passthrough geology overlay.
+                    </div>
+
                 </div>
             </div>
 
@@ -348,7 +393,7 @@
         <!-- Footer -->
         <div class="loader-footer">
             <div class="text-[9px] font-mono text-stone-400">
-                <p class="font-bold text-stone-600">INTELLIGENT KERNEL V9.0 XR</p>
+                <p class="font-bold text-stone-600">INTELLIGENT KERNEL V9.5 PRO</p>
                 <p>Copyright 2026. TerraScan Spatial Systems.<br>Augmented Reality Enabled.</p>
             </div>
             
@@ -372,24 +417,44 @@
     <div class="ui-overlay absolute inset-0 flex flex-col p-8 pointer-events-none opacity-0" id="main-ui">
         <!-- Header -->
         <div class="flex justify-between items-start mb-8">
-            <div class="glass-panel px-8 py-0 rounded-[2rem] flex items-center gap-10 shadow-2xl panel-active-outline">
-                <div class="flex items-center gap-5 py-4">
-                    <div class="w-14 h-14 bg-white/50 rounded-[1.25rem] flex items-center justify-center shadow-lg border border-stone-200">
-                        <i data-lucide="scan-eye" class="w-8 h-8 text-stone-700"></i>
+            <div class="glass-panel px-6 py-4 rounded-[2rem] flex items-center gap-8 shadow-2xl panel-active-outline max-w-3xl">
+                <!-- Project Card / Template Input -->
+                <div class="flex items-start gap-4 pr-6 border-r border-stone-300 min-w-[200px]">
+                    <div class="w-12 h-12 bg-white/50 rounded-[1rem] flex items-center justify-center shadow-lg border border-stone-200 shrink-0">
+                        <i data-lucide="folder-kanban" class="w-6 h-6 text-stone-700"></i>
                     </div>
-                    <div>
-                        <h1 class="text-lg font-black tracking-tighter leading-none text-stone-800 uppercase terra-font">TERRA <span class="text-stone-500">SCAN</span></h1>
-                        <span class="text-[10px] text-accent uppercase font-black tracking-[0.3em]">AI Problemist Geology</span>
+                    <div class="flex-1">
+                        <label class="data-label">Project Title</label>
+                        <input type="text" id="proj-title" value="UNTITLED PROJECT" class="bg-transparent text-sm font-black uppercase text-stone-800 w-full outline-none border-b border-transparent hover:border-stone-400 focus:border-stone-800 transition-colors" onchange="updateProjectMeta('title', this.value)">
+                        <div class="flex gap-2 mt-1">
+                            <input type="text" id="proj-id" value="ID-000" class="w-12 bg-transparent text-[9px] font-mono text-stone-500 outline-none hover:text-stone-900" onchange="updateProjectMeta('id', this.value)">
+                            <input type="text" id="proj-lead" value="LEAD_ENG" class="w-16 bg-transparent text-[9px] font-mono text-stone-500 outline-none hover:text-stone-900" onchange="updateProjectMeta('lead', this.value)">
+                        </div>
                     </div>
                 </div>
-                <div class="h-12 w-px bg-stone-300"></div>
-                <nav class="flex h-full items-end">
-                    <button onclick="switchWorkspace('schematic')" id="ws-schematic" class="workspace-btn"><i data-lucide="ruler" class="w-4 h-4"></i>2D Schematic</button>
-                    <div class="w-px h-6 bg-stone-300 mx-2"></div>
-                    <button onclick="switchWorkspace('survey')" id="ws-survey" class="workspace-btn active"><i data-lucide="compass" class="w-4 h-4"></i>3D Survey</button>
-                    <button onclick="switchWorkspace('design')" id="ws-design" class="workspace-btn"><i data-lucide="layers-2" class="w-4 h-4"></i>3D Design</button>
-                    <button onclick="switchWorkspace('analysis')" id="ws-analysis" class="workspace-btn"><i data-lucide="cpu" class="w-4 h-4"></i>3D Analysis</button>
-                    <button onclick="switchWorkspace('immersive')" id="ws-immersive" class="workspace-btn"><i data-lucide="glasses" class="w-4 h-4"></i>XR Immersive</button>
+
+                <!-- Project Metering -->
+                <div class="flex-1 pr-6 border-r border-stone-300">
+                    <label class="data-label">Metering & Usage</label>
+                    <div class="flex justify-between items-end mb-1">
+                        <span class="text-[9px] font-bold text-stone-600">Completion Phase</span>
+                        <span id="meter-percent" class="text-[9px] font-mono text-accent">0%</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-stone-200 rounded-full overflow-hidden mb-2">
+                        <div id="meter-bar" class="h-full bg-accent w-0 transition-all duration-500"></div>
+                    </div>
+                    <div class="flex justify-between text-[8px] font-mono text-stone-400">
+                        <span>ENTITIES: <span id="meter-ent" class="text-stone-600">0</span></span>
+                        <span>SESSION: <span id="meter-time" class="text-stone-600">00:00</span></span>
+                    </div>
+                </div>
+
+                <nav class="flex h-full items-center">
+                    <button onclick="switchWorkspace('schematic')" id="ws-schematic" class="workspace-btn"><i data-lucide="ruler" class="w-4 h-4"></i>2D</button>
+                    <button onclick="switchWorkspace('survey')" id="ws-survey" class="workspace-btn active"><i data-lucide="compass" class="w-4 h-4"></i>3D</button>
+                    <button onclick="switchWorkspace('design')" id="ws-design" class="workspace-btn"><i data-lucide="layers-2" class="w-4 h-4"></i>BIM</button>
+                    <button onclick="switchWorkspace('analysis')" id="ws-analysis" class="workspace-btn"><i data-lucide="cpu" class="w-4 h-4"></i>FEA</button>
+                    <button onclick="switchWorkspace('immersive')" id="ws-immersive" class="workspace-btn"><i data-lucide="glasses" class="w-4 h-4"></i>XR</button>
                 </nav>
             </div>
 
@@ -415,22 +480,25 @@
 
         <!-- Operative Core -->
         <div class="flex-1 flex gap-8 overflow-hidden">
-            <!-- Left Panel: Entities & Hierarchy -->
+            <!-- Left Panel: Entities & Hierarchy & Layers -->
             <div class="w-80 flex flex-col gap-8 ui-layout-col">
-                <div id="panel-entities" class="glass-panel p-8 rounded-[3.5rem] shadow-sm flex flex-col max-h-[60%] panel-active-outline">
-                    <div class="flex justify-between items-center mb-8">
-                        <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-600">Project Entities</h2>
+                <div id="panel-entities" class="glass-panel p-6 rounded-[3.5rem] shadow-sm flex flex-col max-h-[60%] panel-active-outline">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-600">Layers & Entities</h2>
                         <div class="flex gap-2">
-                             <button onclick="undoAction()" class="text-stone-400 hover:text-stone-900 transition tooltip" data-tip="Undo"><i data-lucide="rotate-ccw" class="w-4 h-4"></i></button>
+                             <button onclick="createLayer()" class="text-stone-400 hover:text-emerald-600 transition tooltip" data-tip="Add Layer"><i data-lucide="folder-plus" class="w-4 h-4"></i></button>
                              <button onclick="clearEntities()" class="text-stone-400 hover:text-rose-500 transition tooltip" data-tip="Purge"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
                         </div>
                     </div>
-                    <div id="bim-tree" class="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-2"></div>
+                    <div id="bim-tree" class="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-1"></div>
                 </div>
 
+                <!-- Inspector / Data Entry -->
                 <div id="panel-inspector" class="glass-panel p-8 rounded-[3.5rem] flex-1 flex flex-col shadow-sm overflow-hidden panel-active-outline">
-                    <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-600 mb-6 text-center">Attributes</h2>
-                    <div id="property-panel" class="flex-1 overflow-y-auto pr-2 custom-scrollbar"></div>
+                    <h2 class="text-[11px] font-black uppercase tracking-[0.3em] text-stone-600 mb-6 text-center">Data Entry</h2>
+                    <div id="property-panel" class="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                        <div class="text-center text-stone-400 italic text-[10px] mt-10">Select an object to enter solid-state data.</div>
+                    </div>
                 </div>
             </div>
 
@@ -552,7 +620,7 @@
         <!-- Footer -->
         <div class="mt-8 flex justify-between items-center text-[10px] text-stone-400 font-mono font-bold tracking-[0.3em] uppercase pt-6 border-t border-stone-300">
             <span id="coord-display">REF_COORDS: [00.00, 00.00, 0.00]</span>
-            <span class="text-accent">BUILD 9.0 XR_ENABLED</span>
+            <span class="text-accent">BUILD 9.5 PRO</span>
         </div>
     </div>
 
@@ -570,6 +638,15 @@
         let aiBoreholes = [];
         let aiScanInterval;
         let anomaliesDetected = 0;
+
+        // Project Metadata & Metering
+        let projectMeta = {
+            title: "UNTITLED PROJECT",
+            id: "ID-000",
+            lead: "LEAD_ENG",
+            startTime: Date.now(),
+            layers: ["Default", "Structural", "Geology", "Imports"]
+        };
 
         // Faded / Sun-bleached Hues
         const DISCIPLINE_COLORS = { 
@@ -594,92 +671,38 @@
         const VRButton = {
             createButton: function ( renderer ) {
                 const button = document.createElement( 'button' );
-
                 function showEnterVR( /*device*/ ) {
                     let currentSession = null;
                     async function onSessionStarted( session ) {
                         session.addEventListener( 'end', onSessionEnded );
                         await renderer.xr.setSession( session );
-                        button.textContent = 'EXIT XR';
-                        currentSession = session;
+                        button.textContent = 'EXIT XR'; currentSession = session;
                     }
-
                     function onSessionEnded( /*event*/ ) {
                         currentSession.removeEventListener( 'end', onSessionEnded );
-                        button.textContent = 'ENTER XR';
-                        currentSession = null;
+                        button.textContent = 'ENTER XR'; currentSession = null;
                     }
-
-                    button.style.display = '';
-                    button.style.cursor = 'pointer';
-                    button.style.left = 'calc(50% - 50px)';
-                    button.style.width = '100px';
-                    button.textContent = 'ENTER XR';
-
+                    button.style.display = ''; button.style.cursor = 'pointer'; button.style.left = 'calc(50% - 50px)'; button.style.width = '100px'; button.textContent = 'ENTER XR';
                     button.onmouseenter = function () { button.style.opacity = '1.0'; };
                     button.onmouseleave = function () { button.style.opacity = '0.5'; };
-
                     button.onclick = function () {
                         if ( currentSession === null ) {
                             const sessionInit = { optionalFeatures: [ 'local-floor', 'bounded-floor', 'hand-tracking', 'layers' ] };
                             navigator.xr.requestSession( 'immersive-vr', sessionInit ).then( onSessionStarted );
-                        } else {
-                            currentSession.end();
-                        }
+                        } else { currentSession.end(); }
                     };
                 }
-
-                function disableButton() {
-                    button.style.display = '';
-                    button.style.cursor = 'auto';
-                    button.style.left = 'calc(50% - 75px)';
-                    button.style.width = '150px';
-                    button.textContent = 'VR UNSUPPORTED';
-                    button.onclick = null;
-                }
-
-                function showWebXRNotFound() {
-                    disableButton();
-                }
-
-                function stylizeElement( element ) {
-                    element.style.position = 'absolute';
-                    element.style.bottom = '20px';
-                    element.style.padding = '12px 6px';
-                    element.style.border = '1px solid #fff';
-                    element.style.borderRadius = '4px';
-                    element.style.background = 'rgba(0,0,0,0.1)';
-                    element.style.color = '#fff';
-                    element.style.font = 'normal 13px sans-serif';
-                    element.style.textAlign = 'center';
-                    element.style.opacity = '0.5';
-                    element.style.outline = 'none';
-                    element.style.zIndex = '999';
-                }
-
+                function disableButton() { button.style.display = ''; button.style.cursor = 'auto'; button.style.left = 'calc(50% - 75px)'; button.style.width = '150px'; button.textContent = 'VR UNSUPPORTED'; button.onclick = null; }
+                function showWebXRNotFound() { disableButton(); }
+                function stylizeElement( element ) { element.style.position = 'absolute'; element.style.bottom = '20px'; element.style.padding = '12px 6px'; element.style.border = '1px solid #fff'; element.style.borderRadius = '4px'; element.style.background = 'rgba(0,0,0,0.1)'; element.style.color = '#fff'; element.style.font = 'normal 13px sans-serif'; element.style.textAlign = 'center'; element.style.opacity = '0.5'; element.style.outline = 'none'; element.style.zIndex = '999'; }
                 if ( 'xr' in navigator ) {
-                    button.id = 'VRButton';
-                    button.style.display = 'none';
-                    stylizeElement( button );
-                    navigator.xr.isSessionSupported( 'immersive-vr' ).then( function ( supported ) {
-                        supported ? showEnterVR() : showWebXRNotFound();
-                    } );
-                    document.body.appendChild( button );
-                    return button;
+                    button.id = 'VRButton'; button.style.display = 'none'; stylizeElement( button );
+                    navigator.xr.isSessionSupported( 'immersive-vr' ).then( function ( supported ) { supported ? showEnterVR() : showWebXRNotFound(); } );
+                    document.body.appendChild( button ); return button;
                 } else {
                     const message = document.createElement( 'a' );
-                    if ( window.isSecureContext === false ) {
-                        message.href = document.location.href.replace( /^http:/, 'https:' );
-                        message.innerHTML = 'WEBXR NEEDS HTTPS'; 
-                    } else {
-                        message.href = 'https://immersiveweb.dev/';
-                        message.innerHTML = 'WEBXR NOT AVAILABLE';
-                    }
-                    message.style.left = 'calc(50% - 90px)';
-                    message.style.width = '180px';
-                    message.style.textDecoration = 'none';
-                    stylizeElement( message );
-                    return message;
+                    if ( window.isSecureContext === false ) { message.href = document.location.href.replace( /^http:/, 'https:' ); message.innerHTML = 'WEBXR NEEDS HTTPS'; } else { message.href = 'https://immersiveweb.dev/'; message.innerHTML = 'WEBXR NOT AVAILABLE'; }
+                    message.style.left = 'calc(50% - 90px)'; message.style.width = '180px'; message.style.textDecoration = 'none'; stylizeElement( message ); return message;
                 }
             }
         };
@@ -737,7 +760,7 @@
 
             createTopography();
             bimModel = new THREE.Group(); scene.add(bimModel);
-            addBIMComponent('MASTER_FOUNDATION_NODE', 'IfcSlab', 'Concrete_C40_Structural', new THREE.Vector3(0, 12, 0), new THREE.Vector3(160, 6, 100), true);
+            addBIMComponent('MASTER_FOUNDATION_NODE', 'IfcSlab', 'Concrete_C40_Structural', new THREE.Vector3(0, 12, 0), new THREE.Vector3(160, 6, 100), 'Structural', true);
 
             setupHandlers();
             setupDragAndDrop();
@@ -745,6 +768,9 @@
             
             // Switch to XR Animation Loop
             renderer.setAnimationLoop(render);
+
+            // Start Metering Interval
+            setInterval(updateMetering, 1000);
 
             if (typeof lucide !== 'undefined') lucide.createIcons();
             
@@ -780,6 +806,44 @@
                 const mainUi = document.getElementById('main-ui');
                 if(mainUi) { mainUi.classList.remove('pointer-events-none'); mainUi.style.opacity = '1'; }
             }, 800);
+        }
+
+        // --- Project Metadata & Metering Logic ---
+        function updateProjectMeta(field, value) {
+            projectMeta[field] = value;
+            logActivity(`Project Updated: ${field.toUpperCase()} -> ${value}`, 'save');
+        }
+
+        function createLayer() {
+            const name = prompt("Enter new Layer/Folder Name:", "Phase 2 - Concrete");
+            if(name && !projectMeta.layers.includes(name)) {
+                projectMeta.layers.push(name);
+                updateTree();
+                logActivity(`Created Layer: ${name}`, 'folder-plus');
+            }
+        }
+
+        function updateMetering() {
+            const count = bimModel.children.length;
+            const elapsed = Math.floor((Date.now() - projectMeta.startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            
+            document.getElementById('meter-ent').innerText = count;
+            document.getElementById('meter-time').innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            // Calculate % based on arbitrary complexity metrics
+            let progress = Math.min(100, Math.floor((count * 2) + (anomaliesDetected * 5) + (stressPoints.length * 10)));
+            if (isSolving) progress = 100;
+            
+            document.getElementById('meter-percent').innerText = `${progress}%`;
+            document.getElementById('meter-bar').style.width = `${progress}%`;
+            
+            // Update color based on phase
+            const bar = document.getElementById('meter-bar');
+            if (progress < 30) bar.style.backgroundColor = '#059669'; // Emerald
+            else if (progress < 70) bar.style.backgroundColor = '#0284c7'; // Blue
+            else bar.style.backgroundColor = '#be123c'; // Red
         }
 
         // --- Workspace Logic ---
@@ -1037,12 +1101,16 @@
             gridHelper.position.y = -35; scene.add(gridHelper);
         }
 
-        function addBIMComponent(name, type, material, pos, scale, suppressLog = false) {
+        function addBIMComponent(name, type, material, pos, scale, layer, suppressLog = false) {
             const mesh = new THREE.Mesh(new THREE.BoxGeometry(scale.x, scale.y, scale.z), new THREE.MeshStandardMaterial({ 
                 color: 0x94a3b8, roughness: 0.5, metalness: 0.1, clippingPlanes: [globalSectionPlane, boreholePlane] 
             }));
             mesh.position.copy(pos); mesh.castShadow = true;
-            mesh.userData = { id: 'TS_PRO_'+Math.random().toString(36).substr(2,4).toUpperCase(), name, type, material, visible: true };
+            mesh.userData = { 
+                id: 'TS_PRO_'+Math.random().toString(36).substr(2,4).toUpperCase(), 
+                name, type, material, layer: layer || 'Default', visible: true,
+                cost: "0.00", comments: "No remarks."
+            };
             bimModel.add(mesh);
             updateTree();
             if (!suppressLog) pushAction({ type: 'ADD', target: mesh });
@@ -1051,15 +1119,27 @@
 
         function updateTree() {
             const tree = document.getElementById('bim-tree'); if(!tree) return; tree.innerHTML = '';
-            bimModel.children.forEach(child => {
-                const d = child.userData;
-                const node = document.createElement('div');
-                node.className = `bim-node ${selectedEntityId === d.id ? 'selected' : ''}`;
-                node.onclick = () => inspectElement(d);
-                node.innerHTML = `
-                    <div class="flex items-center gap-4"><i data-lucide="package" class="w-4 h-4" style="color:var(--ws-accent)"></i><span class="text-[10px] font-black uppercase text-stone-700">${d.name}</span></div>
-                    <div class="flex gap-2"><button onclick="toggleVisibility('${d.id}', event)" class="p-1 hover:bg-stone-200 rounded-lg"><i data-lucide="${child.visible ? 'eye' : 'eye-off'}" class="w-3.5 h-3.5 text-stone-400"></i></button><button onclick="deleteEntity('${d.id}', event)" class="p-1 hover:bg-red-50 hover:text-red-500 rounded-lg text-rose-400"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button></div>`;
-                tree.appendChild(node);
+            
+            projectMeta.layers.forEach(layer => {
+                // Header for Layer
+                const header = document.createElement('div');
+                header.className = 'layer-header';
+                header.innerHTML = `<span>${layer}</span><i data-lucide="folder" class="w-3 h-3"></i>`;
+                tree.appendChild(header);
+
+                // Items in layer
+                bimModel.children.forEach(child => {
+                    const d = child.userData;
+                    if(d.layer !== layer) return;
+
+                    const node = document.createElement('div');
+                    node.className = `bim-node ${selectedEntityId === d.id ? 'selected' : ''}`;
+                    node.onclick = () => inspectElement(d);
+                    node.innerHTML = `
+                        <div class="flex items-center gap-4 ml-2"><i data-lucide="package" class="w-3 h-3 text-stone-400"></i><span class="text-[10px] font-medium text-stone-700 truncate w-24">${d.name}</span></div>
+                        <div class="flex gap-1"><button onclick="toggleVisibility('${d.id}', event)" class="p-1 hover:bg-stone-200 rounded-lg"><i data-lucide="${child.visible ? 'eye' : 'eye-off'}" class="w-3 h-3 text-stone-400"></i></button><button onclick="deleteEntity('${d.id}', event)" class="p-1 hover:bg-red-50 hover:text-red-500 rounded-lg text-rose-400"><i data-lucide="trash-2" class="w-3 h-3"></i></button></div>`;
+                    tree.appendChild(node);
+                });
             });
             if (typeof lucide !== 'undefined') lucide.createIcons();
         }
@@ -1076,9 +1156,45 @@
         function logActivity(message, code) { activityLedger.push({ time: new Date().toISOString(), message, code }); log(message, code === 'BOOT_READY' ? 'shield-check' : 'info'); }
 
         function exportProjectAudit() {
-            log("SERIALIZING PROJECT REPORT...", "file-text");
-            const report = `TERRASCAN ENGINEERING REPORT\nBUILD 7.7.2 PRO\nEntities: ${bimModel.children.length}\nDate: ${new Date().toISOString()}\n\nLOG:\n` + activityLedger.map(a => `[${a.time}] ${a.message}`).join('\n');
-            const blob = new Blob([report], {type:'text/plain'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `TERRASCAN_REPORT_${Date.now()}.txt`; a.click();
+            log("GENERATING PROFESSIONAL REPORT...", "file-text");
+            
+            let exportData = {
+                meta: projectMeta,
+                stats: { entities: bimModel.children.length, anomalies: anomaliesDetected, stressNodes: stressPoints.length },
+                logs: activityLedger,
+                inventory: []
+            };
+
+            bimModel.children.forEach(c => {
+                exportData.inventory.push(c.userData);
+            });
+
+            const jsonStr = JSON.stringify(exportData, null, 2);
+            
+            // Generate formatted Text Report
+            let txt = `TERRASCAN INFINITE | PROFESSIONAL REPORT\n========================================\n`;
+            txt += `PROJECT: ${projectMeta.title} [${projectMeta.id}]\n`;
+            txt += `LEAD ENG: ${projectMeta.lead}\n`;
+            txt += `DATE: ${new Date().toLocaleString()}\n`;
+            txt += `STATUS: Phase Completion ${document.getElementById('meter-percent').innerText}\n\n`;
+            
+            txt += `[LAYER BREAKDOWN]\n-----------------\n`;
+            projectMeta.layers.forEach(l => {
+                const count = bimModel.children.filter(c => c.userData.layer === l).length;
+                txt += `${l.padEnd(20)}: ${count} objects\n`;
+            });
+
+            txt += `\n[INVENTORY DETAILS]\n-------------------\n`;
+            bimModel.children.forEach(c => {
+                const d = c.userData;
+                txt += `> ${d.name} (${d.type})\n  Mat: ${d.material} | Cost: $${d.cost}\n  Note: ${d.comments}\n\n`;
+            });
+
+            const blob = new Blob([txt], {type:'text/plain'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `TERRASCAN_PRO_${projectMeta.id}_${Date.now()}.txt`;
+            a.click();
         }
 
         function updateBoreholeSection(v) {
@@ -1102,6 +1218,8 @@
         function inspectElement(ent) {
             selectedEntityId = ent.id; updateTree();
             const p = document.getElementById('property-panel');
+            
+            // Solid State Data Inputs
             if(p) {
                 p.innerHTML = `
                     <div class="space-y-6 fade-in-up">
@@ -1109,10 +1227,26 @@
                             <span class="text-[9px] font-black uppercase text-stone-500 mb-2 block tracking-widest">System GUID</span>
                             <div class="font-mono text-[9px] break-all leading-tight text-stone-800">${ent.id}</div>
                         </div>
-                        <div class="space-y-2">
-                            <div class="p-4 bg-white/40 border border-stone-200 rounded-2xl flex justify-between items-center shadow-sm">
-                                <span class="text-stone-500 uppercase text-[9px] font-black">Functional Class</span>
-                                <span class="text-[10px] font-black text-accent">${ent.type}</span>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="data-label">Component Name</label>
+                                <input type="text" class="data-input" value="${ent.name}" onchange="updateEntityData('${ent.id}', 'name', this.value)">
+                            </div>
+                             <div>
+                                <label class="data-label">Type / Class</label>
+                                <input type="text" class="data-input" value="${ent.type}" onchange="updateEntityData('${ent.id}', 'type', this.value)">
+                            </div>
+                            <div>
+                                <label class="data-label">Material Spec</label>
+                                <input type="text" class="data-input" value="${ent.material}" onchange="updateEntityData('${ent.id}', 'material', this.value)">
+                            </div>
+                             <div>
+                                <label class="data-label">Est. Cost ($)</label>
+                                <input type="text" class="data-input" value="${ent.cost || '0.00'}" onchange="updateEntityData('${ent.id}', 'cost', this.value)">
+                            </div>
+                             <div>
+                                <label class="data-label">Eng. Comments</label>
+                                <textarea class="w-full bg-white/50 border border-stone-200 rounded-lg p-2 text-[10px] font-mono" rows="3" onchange="updateEntityData('${ent.id}', 'comments', this.value)">${ent.comments || ''}</textarea>
                             </div>
                         </div>
                     </div>`;
@@ -1122,6 +1256,15 @@
                 m.traverse(node => { if(node.isMesh) { node.material.emissive.set(isSelected ? new THREE.Color(getComputedStyle(document.documentElement).getPropertyValue('--ws-accent').trim()) : 0x000000); node.material.emissiveIntensity = 0.6; } });
                 if(isSelected) { const bbox = new THREE.Box3().setFromObject(m); const center = new THREE.Vector3(); bbox.getCenter(center); controls.target.copy(center); controls.update(); }
             });
+        }
+
+        function updateEntityData(id, field, value) {
+            const ent = bimModel.children.find(c => c.userData.id === id);
+            if(ent) {
+                ent.userData[field] = value;
+                updateTree(); // To refresh name if changed
+                logActivity(`Updated ${field} for ${id}`, 'pencil');
+            }
         }
 
         function triggerImport() { document.getElementById('file-input').click(); }
@@ -1142,7 +1285,10 @@
                 const obj = loader.parse(data);
                 const bbox = new THREE.Box3().setFromObject(obj); const center = new THREE.Vector3(); bbox.getCenter(center);
                 obj.position.sub(center); obj.position.y += 25; 
-                obj.userData = { id: 'OBJ_'+Date.now(), name: filename, type: 'Imported_Mesh', visible: true };
+                obj.userData = { 
+                    id: 'OBJ_'+Date.now(), name: filename, type: 'Imported_Mesh', layer: 'Imports', visible: true,
+                    material: 'Generic Mesh', cost: '0.00', comments: 'Imported via Drag-n-Drop'
+                };
                 obj.traverse(c => { if (c.isMesh) c.material = new THREE.MeshStandardMaterial({ 
                     color: 0xcbd5e1, // Light Steel
                     clippingPlanes: [globalSectionPlane, boreholePlane] 
@@ -1154,7 +1300,7 @@
             log(`PARSING IFC SCHEMA: ${filename}`, "scan");
             const entities = (data.match(/IFCCOLUMN|IFCWALL|IFCSLAB/g) || []);
             const count = Math.min(entities.length, 6);
-            for(let i=0; i<count; i++) { addBIMComponent(`${filename}_Node_${i}`, entities[i], 'IFC_Proxy', new THREE.Vector3(Math.random()*60-30, 20, Math.random()*60-30), new THREE.Vector3(10, 15, 10)); }
+            for(let i=0; i<count; i++) { addBIMComponent(`${filename}_Node_${i}`, entities[i], 'IFC_Proxy', new THREE.Vector3(Math.random()*60-30, 20, Math.random()*60-30), new THREE.Vector3(10, 15, 10), 'Imports'); }
             log(`IFC STRUCTURE MAPPED: ${count} Entities.`, "check-circle-2");
         }
 
@@ -1178,14 +1324,14 @@
                 pushAction({ type: 'DELETE', target: c });
                 bimModel.remove(c);
                 updateTree();
-                if(selectedEntityId === id) document.getElementById('property-panel').innerHTML = '';
+                if(selectedEntityId === id) document.getElementById('property-panel').innerHTML = '<div class="text-center text-stone-400 italic text-[10px] mt-10">Select an object to enter solid-state data.</div>';
                 logActivity(`Deleted: ${c.userData.name}`, "trash-2");
             }
         }
 
         function clearEntities() {
             bimModel.clear(); updateTree();
-            const propPanel = document.getElementById('property-panel'); if(propPanel) propPanel.innerHTML = '';
+            const propPanel = document.getElementById('property-panel'); if(propPanel) propPanel.innerHTML = '<div class="text-center text-stone-400 italic text-[10px] mt-10">Select an object to enter solid-state data.</div>';
             log("Project domain purged.", "trash-2");
         }
 
